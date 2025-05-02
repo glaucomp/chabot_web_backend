@@ -46,9 +46,11 @@ class Brain:
 
     def ensure_documents_loaded(self):
         if self._check_collection_count() == 0:
-            documents = self.load_and_process_json_file()
+            # documents = self.load_and_process_json_file()
             rules_chunks = self._load_and_chunk_rules()
-            all_docs = self.prepare_brain_documents(documents + rules_chunks)
+            # all_docs = self.prepare_brain_documents(documents + rules_chunks)
+            all_docs = self.prepare_brain_documents(rules_chunks)
+
             self.vector_store.add_documents(all_docs)
             logger.info(f"{len(all_docs)} documents loaded to ChromaDB.")
         else:
@@ -79,7 +81,7 @@ class Brain:
                 logger.error(f"Error loading {file_name}: {e}")
         return all_documents
 
-    def _load_and_chunk_rules(self, file_name="4DJokerRulesDocument.markdown", max_tokens=400):
+    def _load_and_chunk_rules(self, file_name="innovation_tactics.markdown", max_tokens=400):
         base_dir = os.path.join(os.path.dirname(__file__), "../../data")
         file_path = os.path.join(base_dir, file_name)
 
@@ -113,6 +115,49 @@ class Brain:
 
         except Exception as e:
             logger.error(f"Error chunking rules file: {e}")
+        return []
+    
+    def _load_and_chunk_rules_array(self, file_names=["default_cards.markdown", "innovation_tactics.markdown"], max_tokens=400):
+        base_dir = os.path.join(os.path.dirname(__file__), "../../data")
+
+        all_rules_content = ""
+
+        try:
+            # Lê e concatena conteúdos dos arquivos
+            for file_name in file_names:
+                file_path = os.path.join(base_dir, file_name)
+                with open(file_path, "r", encoding="utf-8") as f:
+                    file_content = f.read()
+                    all_rules_content += "\n" + file_content
+
+            # Divide o conteúdo combinado por seções
+            sections = re.split(r'(## .+)', all_rules_content)
+            encoding = tiktoken.encoding_for_model("gpt-4")
+            chunks, current_chunk, current_tokens = [], "", 0
+
+            # Processa cada seção como antes
+            for section in sections:
+                if not section.strip():
+                    continue
+                section_tokens = len(encoding.encode(section))
+                if current_tokens + section_tokens > max_tokens:
+                    chunks.append(current_chunk.strip())
+                    current_chunk, current_tokens = section, section_tokens
+                else:
+                    current_chunk += "\n" + section
+                    current_tokens += section_tokens
+
+            if current_chunk:
+                chunks.append(current_chunk.strip())
+
+            return [{
+                "id": f"rules_{i}",
+                "content": chunk,
+                "metadata": {"category": "static_rules"}
+            } for i, chunk in enumerate(chunks)]
+
+        except Exception as e:
+            logger.error(f"Error chunking rules files: {e}")
         return []
 
     def prepare_brain_documents(self, raw_docs):

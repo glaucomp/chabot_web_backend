@@ -52,7 +52,7 @@ class PromptConversationAdminView(APIView):
 
             validated_data = input_serializer.validated_data
 
-            response = prompt_conversation_grok_admin(
+            response = prompt_conversation_admin(
                 user_prompt=validated_data["prompt"],
                 conversation_id=validated_data["conversation_id"],
                 admin_id=validated_data.get("admin_id", ""),
