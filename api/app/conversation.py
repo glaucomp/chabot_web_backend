@@ -265,7 +265,7 @@ def prompt_conversation_admin(
             combined_context = ""
             if all_docs:
                 combined_context += (
-                    "Boss, here’s what we found in the official 4D Joker knowledge base that may help:\n\n"
+                    "Here's what I found in our Innovation Knowledge Base:\n\n"
                     + "\n\n---\n\n".join([doc.page_content for doc in all_docs])
                 )
 

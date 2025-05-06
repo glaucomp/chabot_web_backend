@@ -92,3 +92,30 @@
 - Create multiple short, specific texts introducing your innovation.
 - Test these texts with real people, selecting the most appealing ones.
 - Validate the best versions using simple advertisements to measure clicks and real interest.
+
+📌 **Key Concepts**
+ Situation
+Understand the reality of the world you’re dealing
+with and the people within it, so you can spot
+opportunities for innovation.
+ Ideas
+Come up with surprising new ideas for products,
+services or experiences, using exercises that
+stimulate your creativity.
+ Focus
+Enable yourself to start with the riskiest aspect of
+an idea. Then, if you need to adapt, you’ll have the
+leeway to take more ‘shots’ and find success.
+ Signals
+Identify which type(s) of signals you’d need to see
+to feel confident that your innovation will succeed.
+ Probe
+Poke the world for the signals you need. How have
+(or haven’t) real humans changed their behaviour as
+a result of something you put out there?
+ Sense
+Generate actionable insights from the signals you
+gathered. Then you can either adapt your plans, or
+move forward with confidence and momentum.
+ Support
+Core methods for innovation.
