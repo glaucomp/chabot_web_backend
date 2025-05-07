@@ -2,14 +2,14 @@ from .base import *  # noqa: F403
 import os
 
 DEBUG = False
-ALLOWED_HOSTS = ["api.mjproapps.com", "www.mjproapps.com", "13.238.144.45"]
+ALLOWED_HOSTS = ["api.mjpro.vip", "www.mjpro.com", "54.153.205.34"]
 
 # CORS_ALLOW_ALL_ORIGINS = True
 
 CORS_ALLOWED_ORIGINS = [
-    "https://api.mjproapps.com",
-    "https://mjproapps.com",
-    "https://www.mjproapps.com",
+    "https://api.mjpro.vip",
+    "https://mjpro.vip",
+    "https://www.mjpro.vip",
 ]
 
 # Security
