@@ -34,47 +34,6 @@ from .mongo import MongoDB
 
 logger = logging.getLogger(__name__)
 
-
-def is_finalizing_phrase(phrase):
-    api_key = os.getenv("OPENAI_API_KEY")
-    if not api_key:
-        logger.error("Missing OPENAI_API_KEY environment variable.")
-        return "false"
-
-    client = OpenAI(api_key=api_key)
-    """
-    Analyzes whether a given phrase is likely to be a conversation-ender.
-    """
-    messages = [
-        {
-            "role": "system",
-            "content": "You are an assistant that determines if a phrase ends a conversation.",
-        },
-        {
-            "role": "user",
-            "content": f"Does the following phrase indicate the end of a conversation? \
-                \n\nPhrase: \"{phrase}\"\n\n \
-                Respond with 'Yes' or 'No'.",
-        },
-    ]
-
-    try:
-        response = client.chat.completions.create(
-            model=OPENAI_MODEL,
-            messages=messages,
-            temperature=0,
-            timeout=OPENAI_TIMEOUT,
-        )
-
-        result = response.choices[0].message.content.strip()
-        if result.lower() == "yes":
-            return "true"
-        else:
-            return "false"
-
-    except Exception as e:
-        print(f"Error during OpenAI API call: {e}")
-        return False
     
 def prompt_conversation(self, user_prompt, store ,language_code=LANGUAGE_DEFAULT):
     start_time = time.time()
@@ -184,16 +143,9 @@ def format_docs(docs):
 def prompt_conversation_admin(
     user_prompt,
     conversation_id,
-    admin_id,
-    bot_id,
-    user_id,
-    language_code=LANGUAGE_DEFAULT,
 ):
 
     start_time = time.time()
-    logger.info(
-        f"Starting prompt_conversation_admin request - Language: {language_code}"
-    )
 
     try:
         
@@ -269,20 +221,7 @@ def prompt_conversation_admin(
                     + "\n\n---\n\n".join([doc.page_content for doc in all_docs])
                 )
 
-            language_prompts = {
-                "en": "Please respond only in English.",
-                "ms_MY": "Sila balas dalam Bahasa Melayu sahaja.",
-                "zh_CN": "请只用中文回复。",
-                "zh_TW" : "請只用中文回覆。",
-            }
-
-            language_instruction = language_prompts.get(language_code, language_prompts["ms_MY"])
-
-            # Add language instruction before context
-            messages_history.insert(0, {
-                "role": "system",
-                "content": language_instruction
-            })
+        
 
             # Inject into system prompt
             if combined_context:
@@ -300,7 +239,6 @@ def prompt_conversation_admin(
             logger.error(f"OpenAI error: {str(oe)}")
             raise
 
-        is_last_message = is_finalizing_phrase(ai_response)
       
         # Update conversation
         messages.append(
@@ -314,10 +252,6 @@ def prompt_conversation_admin(
         # Prepare and save conversation
         conversation = {
             "session_id": conversation_id,
-            "admin_id": admin_id,
-            "bot_id": bot_id,
-            "user_id": user_id,
-            "language": language_code,
             "messages": messages,
             "updated_at": datetime.now().isoformat(),
         }
@@ -343,8 +277,6 @@ def prompt_conversation_admin(
         return {
             "generation": ai_response,
             "conversation_id": conversation_id,
-            "language": language_code,
-            "is_last_message": is_last_message,
         }
 
     except Exception as e:

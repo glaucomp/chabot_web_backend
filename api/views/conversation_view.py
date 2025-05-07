@@ -55,10 +55,6 @@ class PromptConversationAdminView(APIView):
             response = prompt_conversation_admin(
                 user_prompt=validated_data["prompt"],
                 conversation_id=validated_data["conversation_id"],
-                admin_id=validated_data.get("admin_id", ""),
-                bot_id=validated_data.get("bot_id", ""),
-                user_id=validated_data["user_id"],
-                language_code=language_code,
             )
 
             return Response(response, status=status.HTTP_200_OK)

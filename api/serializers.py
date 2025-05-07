@@ -101,14 +101,7 @@ class CompleteConversationsSerializer(serializers.Serializer):
 class PromptConversationAdminSerializer(serializers.Serializer):
     prompt = serializers.CharField(required=True)
     conversation_id = serializers.CharField(required=True)
-    user_id = serializers.CharField(required=True)
-    admin_id = serializers.CharField(required=False, default="")
-    bot_id = serializers.CharField(required=False, default="")
-    language = serializers.CharField(
-        max_length=10,
-        required=False,
-        default="en",
-    )
+   
 class PromptConversationAgentAiSerializer(serializers.Serializer):
     prompt = serializers.CharField(required=True)
     
