@@ -6,6 +6,8 @@ from langchain_openai import ChatOpenAI
 from langchain.schema import HumanMessage
 from .brain import Brain
 from .config import CHAT_MODEL
+from openai import OpenAI
+from ..agents.initial_agent import InitialAgent
 
 
 load_dotenv()
@@ -35,13 +37,23 @@ class ChatBot:
             self.vector_store = self.brain.vector_store
             self.llm = ChatOpenAI(model=CHAT_MODEL, api_key=OPENAI_API_KEY, temperature=0.5)
             self.prompt = hub.pull("rlm/rag-prompt")
+            self.client = OpenAI(api_key=OPENAI_API_KEY) 
+            self.topics = [
+                "Brand tactics",
+                "Storyteller tactics",
+                "Team tactics",
+                "Idea tactics",
+                "Strategy tactics",
+                "Workshop tactics",
+                "Innovation tactics"
+            ]
+            self.initial_agent  = InitialAgent(openai_key=OPENAI_API_KEY, topics= self.topics)
             self.initialized = True
             logger.info("ChatBot initialized successfully.")
         except Exception as e:
             logger.exception(f"Initialization failed: {e}")
             raise RuntimeError("ChatBot initialization failed.") from e
     
-
     def generate_response(self, messages_history):
         response = self.llm.invoke(messages_history)
         return response.content

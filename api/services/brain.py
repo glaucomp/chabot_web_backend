@@ -44,50 +44,32 @@ class Brain:
         self.initialized = True
         self.ensure_documents_loaded()
 
+    
     def ensure_documents_loaded(self):
         if self._check_collection_count() == 0:
-            # documents = self.load_and_process_json_file()
-            rules_chunks = self._load_and_chunk_rules()
-            # all_docs = self.prepare_brain_documents(documents + rules_chunks)
+            base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../data"))
+            file_name = f"{self.collection_name}.markdown"
+            file_path = os.path.join(base_dir, file_name)
+
+            rules_chunks = self._load_and_chunk_rules(file_path)
             all_docs = self.prepare_brain_documents(rules_chunks)
 
-            self.vector_store.add_documents(all_docs)
-            logger.info(f"{len(all_docs)} documents loaded to ChromaDB.")
+            if all_docs:
+                self.vector_store.add_documents(all_docs)
+                logger.info(f"{len(all_docs)} documents loaded into collection.")
+            else:
+                logger.warning("⚠️ No documents found to load. Check your markdown file.")
         else:
             logger.info("ChromaDB already initialized with documents.")
 
-    def load_and_process_json_file(self) -> List[dict]:
-        base_dir = os.path.join(os.path.dirname(__file__), "../../data")
-        database_files = ["database_part_1.json", "database_part_2.json", "database_part_3.json", "database_part_4.json"]
-        all_documents = []
-
-        for file_name in database_files:
-            file_path = os.path.join(base_dir, file_name)
-            try:
-                with open(file_path, "r", encoding="utf-8") as f:
-                    data = json.load(f)
-                    for item in data:
-                        detailed_answer = item.get("answer", {}).get("detailed", {}).get("en", "")
-                        if item.get("question", {}).get("text") and detailed_answer:
-                            all_documents.append({
-                                "id": item.get("id", "no_id"),
-                                "content": f"Question: {item['question']['text']}\nAnswer: {detailed_answer}",
-                                "metadata": {
-                                    "category": ",".join(item.get("metadata", {}).get("category", [])),
-                                    "subCategory": item.get("metadata", {}).get("subCategory", ""),
-                                },
-                            })
-            except Exception as e:
-                logger.error(f"Error loading {file_name}: {e}")
-        return all_documents
-
-    def _load_and_chunk_rules(self, file_name="innovation_tactics.markdown", max_tokens=400):
-        base_dir = os.path.join(os.path.dirname(__file__), "../../data")
-        file_path = os.path.join(base_dir, file_name)
-
+    def _load_and_chunk_rules(self, file_path, max_tokens=400):
         try:
             with open(file_path, "r", encoding="utf-8") as f:
                 rules_content = f.read()
+
+            if not rules_content.strip():
+                logger.error(f"❌ Arquivo {file_path} está vazio.")
+                return []
 
             sections = re.split(r'(## .+)', rules_content)
             encoding = tiktoken.encoding_for_model("gpt-4")
@@ -108,57 +90,18 @@ class Brain:
                 chunks.append(current_chunk.strip())
 
             return [{
-                    "id": f"{os.path.splitext(file_name)[0]}_chunk_{i}",
-                    "content": chunk,
-                    "metadata": {
-                        "category": "static_rules",
-                        "source": file_name
-                    }
-                } for i, chunk in enumerate(chunks)]
-
-        except Exception as e:
-            logger.error(f"Error chunking rules file: {e}")
-        return []
-
-    def _load_and_chunk_pdf(file_name="tactics.pdf", max_tokens=400):
-        base_dir = os.path.join(os.path.dirname(__file__), "../../data")
-        file_path = os.path.join(base_dir, file_name)
-
-        try:
-            with open(file_path, "rb") as f:
-                reader = PyPDF2.PdfReader(f)
-                pdf_text = "".join(page.extract_text() for page in reader.pages)
-
-            encoding = tiktoken.encoding_for_model("gpt-4")
-            paragraphs = pdf_text.split("\n\n")
-
-            chunks, current_chunk, current_tokens = [], "", 0
-
-            for paragraph in paragraphs:
-                if not paragraph.strip():
-                    continue
-
-                paragraph_tokens = len(encoding.encode(paragraph))
-
-                if current_tokens + paragraph_tokens > max_tokens:
-                    chunks.append(current_chunk.strip())
-                    current_chunk, current_tokens = paragraph, paragraph_tokens
-                else:
-                    current_chunk += "\n" + paragraph
-                    current_tokens += paragraph_tokens
-
-            if current_chunk:
-                chunks.append(current_chunk.strip())
-
-            return [{
-                "id": f"pdf_chunk_{i}",
+                "id": f"{os.path.basename(file_path)}_chunk_{i}",
                 "content": chunk,
-                "metadata": {"source": file_name}
+                "metadata": {
+                    "category": "static_rules",
+                    "source": os.path.basename(file_path)
+                }
             } for i, chunk in enumerate(chunks)]
 
         except Exception as e:
-            logger.error(f"Error chunking PDF file: {e}")
-        return []
+            logger.error(f"Error loading rules file {file_path}: {e}")
+            return []
+
 
     def _load_and_chunk_rules_array(self, file_names=["default_cards.markdown", "innovation_tactics.markdown"], max_tokens=400):
         base_dir = os.path.join(os.path.dirname(__file__), "../../data")
@@ -216,3 +159,34 @@ class Brain:
 
     def query(self, query: str, k: int = 4):
         return self.vector_store.similarity_search(query, k=k)
+    
+
+
+
+
+    '''
+ def load_and_process_json_file(self) -> List[dict]:
+        base_dir = os.path.join(os.path.dirname(__file__), "../../data")
+        database_files = ["database_part_1.json", "database_part_2.json", "database_part_3.json", "database_part_4.json"]
+        all_documents = []
+
+        for file_name in database_files:
+            file_path = os.path.join(base_dir, file_name)
+            try:
+                with open(file_path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    for item in data:
+                        detailed_answer = item.get("answer", {}).get("detailed", {}).get("en", "")
+                        if item.get("question", {}).get("text") and detailed_answer:
+                            all_documents.append({
+                                "id": item.get("id", "no_id"),
+                                "content": f"Question: {item['question']['text']}\nAnswer: {detailed_answer}",
+                                "metadata": {
+                                    "category": ",".join(item.get("metadata", {}).get("category", [])),
+                                    "subCategory": item.get("metadata", {}).get("subCategory", ""),
+                                },
+                            })
+            except Exception as e:
+                logger.error(f"Error loading {file_name}: {e}")
+        return all_documents
+'''
