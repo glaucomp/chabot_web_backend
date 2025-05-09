@@ -98,7 +98,7 @@ class PromptConversationAdminSerializer(serializers.Serializer):
     prompt = serializers.CharField(required=True)
     conversation_id = serializers.CharField(required=True)
    
-   
+
 class PromptConversationAgentAiSerializer(serializers.Serializer):
     prompt = serializers.CharField(required=True)
     
