@@ -23,6 +23,7 @@ from ai_config.ai_constants import (
 
 from ai_config.ai_prompts import (
     FIRST_MESSAGE_PROMPT,
+    FIRST_MESSAGE_PROMPT_SITE,
 )
 
 from api.agents import get_specialist_agent
@@ -38,6 +39,143 @@ from .mongo import MongoDB
 
 logger = logging.getLogger(__name__)
     
+def prompt_conversation_admin(
+    user_prompt,
+    conversation_id,
+):
+
+    start_time = time.time()
+
+    try:
+        
+        db = MongoDB.get_db()
+        logger.debug(
+            f"MongoDB connection established in {time.time() - start_time:.2f}s"
+        )
+
+        existing_conversation = db.conversations.find_one(
+            {"session_id": conversation_id},
+            {"messages": 1, "_id": 0},
+        )
+
+        messages = (
+            existing_conversation.get("messages", [])
+            if existing_conversation
+            else [{"role": "system", "content": FIRST_MESSAGE_PROMPT_SITE}]
+        )
+
+        # Add user message
+        messages.append(
+            {
+                "role": "user",
+                "content": user_prompt,
+                "timestamp": datetime.now().isoformat(),
+            }
+        )
+
+        # Vector store retrieval
+        vector_start = time.time()
+        docs_retrieve = []
+        try:
+
+            docs_retrieve = chatbot.brain.query(user_prompt)
+
+            for i, doc in enumerate(docs_retrieve, start=1):
+                print(f"📌 Result {i}:")
+                print(f"Content: {doc.page_content}\n")
+                print(f"Metadata: {doc.metadata}\n")
+                print("=" * 50)
+
+            logger.debug(
+                f"Vector store retrieval completed in {time.time() - vector_start:.2f}s"
+            )
+
+        except Exception as ve:
+            logger.error(f"Vector store error: {str(ve)}")
+            docs_retrieve = []
+
+        generation_start = time.time()
+        try:
+            messages_history = messages.copy()
+
+            static_chunks = chatbot.brain.vector_store.similarity_search(
+                query=user_prompt,
+                k=3,
+                filter={"category": "static_rules"}
+            )
+
+            docs_retrieve += static_chunks
+
+            all_docs = docs_retrieve
+
+            combined_context = ""
+            if all_docs:
+                combined_context += (
+                    "Here's what I found in our vector store:\n\n"
+                    + "\n\n---\n\n".join([doc.page_content for doc in all_docs])
+                )
+
+        
+
+            # Inject into system prompt
+            if combined_context:
+                messages_history.insert(0, {
+                    "role": "system",
+                    "content": combined_context
+                })
+
+            ai_response = chatbot.generate_response(messages_history)
+            logger.debug(
+                f"AI response generated in {time.time() - generation_start:.2f}s"
+            )
+
+        except Exception as oe:
+            logger.error(f"OpenAI error: {str(oe)}")
+            raise
+
+      
+        # Update conversation
+        messages.append(
+            {
+                "role": "assistant",
+                "content": ai_response,
+                "timestamp": datetime.now().isoformat(),
+            }
+        )
+
+        # Prepare and save conversation
+        conversation = {
+            "session_id": conversation_id,
+            "messages": messages,
+            "updated_at": datetime.now().isoformat(),
+        }
+
+        # Upsert with retry logic
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                db.conversations.update_one(
+                    {"session_id": conversation_id}, {"$set": conversation}, upsert=True
+                )
+                break
+            except Exception as me:
+                if attempt == max_retries - 1:
+                    raise
+                logger.warning(f"MongoDB retry {attempt + 1}/{max_retries}: {str(me)}")
+                time.sleep(0.5)
+
+
+        total_time = time.time() - start_time
+        logger.info(f"Request completed in {total_time:.2f}s")
+
+        return {
+            "generation": ai_response,
+            "conversation_id": conversation_id,
+        }
+
+    except Exception as e:
+        logger.error(f"Error in prompt_conversation_admin: {str(e)}", exc_info=True)
+        raise
 
 def prompt_conversation_site(
     user_prompt,

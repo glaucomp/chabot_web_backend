@@ -22,12 +22,13 @@ load_dotenv()
 
 
 class Brain:
-    _instance = None
+    _instances = {}
 
-    def __new__(cls, *args, **kwargs):
-        if not cls._instance:
-            cls._instance = super(Brain, cls).__new__(cls, *args, **kwargs)
-        return cls._instance
+    def __new__(cls, collection_name=COLLECTION_NAME, chroma_dir=CHROMA_DIR):
+        key = (collection_name, chroma_dir)
+        if key not in cls._instances:
+            cls._instances[key] = super(Brain, cls).__new__(cls)
+        return cls._instances[key]
 
     def __init__(self, collection_name=COLLECTION_NAME, chroma_dir=CHROMA_DIR):
         if hasattr(self, 'initialized'):
@@ -41,26 +42,25 @@ class Brain:
             embedding_function=self.embedding_model,
             persist_directory=self.chroma_dir,
         )
-        self.initialized = True
         self.ensure_documents_loaded()
+        self.initialized = True
 
-    
     def ensure_documents_loaded(self):
-        if self._check_collection_count() == 0:
-            base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../data"))
-            file_name = f"{self.collection_name}.markdown"
-            file_path = os.path.join(base_dir, file_name)
+        base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../data"))
+        file_name = f"{self.collection_name}.markdown"
+        file_path = os.path.join(base_dir, file_name)
 
+        if self._check_collection_count() == 0:
             rules_chunks = self._load_and_chunk_rules(file_path)
             all_docs = self.prepare_brain_documents(rules_chunks)
 
             if all_docs:
                 self.vector_store.add_documents(all_docs)
-                logger.info(f"{len(all_docs)} documents loaded into collection.")
+                logger.info(f"{len(all_docs)} documents loaded into collection '{self.collection_name}'.")
             else:
-                logger.warning("⚠️ No documents found to load. Check your markdown file.")
+                logger.warning(f"No documents found to load for '{self.collection_name}'.")
         else:
-            logger.info("ChromaDB already initialized with documents.")
+            logger.info(f"ChromaDB already initialized with documents for '{self.collection_name}'.")
 
     def _load_and_chunk_rules(self, file_path, max_tokens=400):
         try:
@@ -109,7 +109,6 @@ class Brain:
         all_rules_content = ""
 
         try:
-            # Lê e concatena conteúdos dos arquivos
             for file_name in file_names:
                 file_path = os.path.join(base_dir, file_name)
                 with open(file_path, "r", encoding="utf-8") as f:

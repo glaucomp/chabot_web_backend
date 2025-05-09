@@ -27,4 +27,30 @@ class BaseAgent:
             self.brain.vector_store.add_documents(all_docs)
             logger.info(f"{len(all_docs)} documentos carregados no brain '{brain_collection}'.")
         else:
-            logger.info(f"Brain '{brain_collection}' já carregado anteriormente.")
+            logger.info(f"Brain '{brain_collection}' has loaded before.")
+
+    def provide_solution(self, user_message, action):
+        docs = self.brain.query(user_message, k=3)
+        context = "\n---\n".join([doc.page_content for doc in docs])
+
+        prompt = f"""
+        You are an expert assistant. The user wants to '{action}'. 
+        Provide a concise and practical solution based on the context provided:
+
+        Context:
+        {context}
+
+        User message:
+        "{user_message}"
+        """
+        
+        logger.info(f"@@@@@@@@@@@ '{prompt}' @@@@@@@@@@@@@@@.")
+
+        response = self.client.chat.completions.create(
+            model="gpt-4-turbo",
+            messages=[{"role": "system", "content": prompt}],
+            temperature=0.5,
+            max_tokens=400
+        )
+
+        return response.choices[0].message.content.strip()

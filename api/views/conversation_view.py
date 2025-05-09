@@ -13,9 +13,14 @@ from api.chatbot import (
 
 from api.app.conversation import (
     prompt_conversation_site,
+    prompt_conversation_admin,
     prompt_conversation_agent_ai,
     prompt_conversation_grok_admin,
     prompt_conversation_image
+ )
+
+from api.app.max_conversation import (
+   max_phone_conversation,
  )
 
 
@@ -33,7 +38,39 @@ from api.app.mongo import MongoDB
 logger = logging.getLogger(__name__)
 
 
-class PromptConversationAdminView(APIView):
+class PromptConversationMaxView(APIView):
+    def post(self, request):
+        logger.info("Starting prompt_conversation_site request")
+        try:
+            language_code = request.GET.get("language", LANGUAGE_DEFAULT)
+            logger.info(f"Processing request for language: {language_code}")
+
+            input_serializer = PromptConversationAdminSerializer(data=request.data)
+            if not input_serializer.is_valid():
+                logger.error(f"Validation failed: {input_serializer.errors}")
+                return Response(
+                    {"error": "Invalid input data", "details": input_serializer.errors},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            validated_data = input_serializer.validated_data
+
+            response = max_phone_conversation(
+                user_prompt=validated_data["prompt"],
+                conversation_id=validated_data["conversation_id"],
+            )
+
+            return Response(response, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            logger.error(
+                f"Error in prompt_conversation_site view: {str(e)}", exc_info=True
+            )
+            return Response(
+                {"error": f"Request processing failed: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+class PromptConversationSiteView(APIView):
     def post(self, request):
         logger.info("Starting prompt_conversation_site request")
         try:
@@ -51,6 +88,39 @@ class PromptConversationAdminView(APIView):
             validated_data = input_serializer.validated_data
 
             response = prompt_conversation_site(
+                user_prompt=validated_data["prompt"],
+                conversation_id=validated_data["conversation_id"],
+            )
+
+            return Response(response, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            logger.error(
+                f"Error in prompt_conversation_site view: {str(e)}", exc_info=True
+            )
+            return Response(
+                {"error": f"Request processing failed: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+        
+class PromptConversationAdminView(APIView):
+    def post(self, request):
+        logger.info("Starting prompt_conversation_site request")
+        try:
+            language_code = request.GET.get("language", LANGUAGE_DEFAULT)
+            logger.info(f"Processing request for language: {language_code}")
+
+            input_serializer = PromptConversationAdminSerializer(data=request.data)
+            if not input_serializer.is_valid():
+                logger.error(f"Validation failed: {input_serializer.errors}")
+                return Response(
+                    {"error": "Invalid input data", "details": input_serializer.errors},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            validated_data = input_serializer.validated_data
+
+            response = prompt_conversation_admin(
                 user_prompt=validated_data["prompt"],
                 conversation_id=validated_data["conversation_id"],
             )

@@ -8,6 +8,7 @@ from .brain import Brain
 from .config import CHAT_MODEL
 from openai import OpenAI
 from ..agents.initial_agent import InitialAgent
+from api.services.config import CHROMA_DIR
 
 
 load_dotenv()
@@ -33,7 +34,7 @@ class ChatBot:
 
         logger.info("Initializing ChatBot...")
         try:
-            self.brain = Brain()
+            self.brain = Brain("what_to_say", CHROMA_DIR)
             self.vector_store = self.brain.vector_store
             self.llm = ChatOpenAI(model=CHAT_MODEL, api_key=OPENAI_API_KEY, temperature=0.5)
             self.prompt = hub.pull("rlm/rag-prompt")
