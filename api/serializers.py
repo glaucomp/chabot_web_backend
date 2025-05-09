@@ -38,21 +38,17 @@ class MessageSerializer(serializers.Serializer):
 
 class UserInputSerializer(serializers.Serializer):
     prompt = serializers.CharField(max_length=1000)
-    user_id = serializers.CharField(
-        max_length=100, required=False, allow_null=True, allow_blank=True
-    )
+     
 
 
 class PromptConversationSerializer(serializers.Serializer):
     prompt = serializers.CharField(max_length=1000, required=True)
     conversation_id = serializers.CharField(max_length=100, required=False)
-    user_id = serializers.CharField(max_length=100, required=False)
 
 
 class PromptConversationHistorySerializer(serializers.Serializer):
     prompt = serializers.CharField(max_length=1000, required=True)
     conversation_id = serializers.CharField(max_length=100, required=True)
-    user_id = serializers.CharField(max_length=100, required=True)
     use_mongo = serializers.BooleanField(default=True, required=False)
 
 
@@ -102,6 +98,7 @@ class PromptConversationAdminSerializer(serializers.Serializer):
     prompt = serializers.CharField(required=True)
     conversation_id = serializers.CharField(required=True)
    
+
 class PromptConversationAgentAiSerializer(serializers.Serializer):
     prompt = serializers.CharField(required=True)
     

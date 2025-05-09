@@ -2,10 +2,11 @@ from django.urls import path
 from django.views.decorators.cache import cache_page
 
 from .views.conversation_view import (
-    PromptConversationView,
     ConversationDetailView,
     AllConversationsIdsView,
     PromptConversationAdminView,
+    PromptConversationSiteView,
+    PromptConversationMaxView,
     PromptConversationAgentAIView,
     PromptImageView,
 )
@@ -18,8 +19,9 @@ from .views.brain_view import (
 # Define URL patterns
 urlpatterns = [
     # Prompt Conversation
-    path("prompt_conversation/",PromptConversationView.as_view(),name="prompt_conversation"),
+    path("prompt_conversation_site/",PromptConversationSiteView.as_view(),name="prompt_conversation_site",),
     path("prompt_conversation_admin/",PromptConversationAdminView.as_view(),name="prompt_conversation_admin",),
+    path("prompt_conversation_max/",PromptConversationMaxView.as_view(),name="prompt_conversation_max",),
     path("prompt_conversation_image/",PromptImageView.as_view(),name="prompt_conversation_image",),
     path("prompt_conversation_agent_ai/",PromptConversationAgentAIView.as_view(),name="prompt_conversation_agent_ai",),
     path("conversation/<conversation_id>/",ConversationDetailView.as_view(), name="conversation"),

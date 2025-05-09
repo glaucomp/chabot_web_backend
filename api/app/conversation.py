@@ -23,123 +23,23 @@ from ai_config.ai_constants import (
 
 from ai_config.ai_prompts import (
     FIRST_MESSAGE_PROMPT,
+    FIRST_MESSAGE_PROMPT_SITE,
 )
 
+from api.agents import get_specialist_agent
 from api.chatbot import (
     chatbot,
 )
+from api.services.chatbot import OPENAI_API_KEY
+from api.services.config import CHROMA_DIR
 
 from .mongo import MongoDB
+
 
 
 logger = logging.getLogger(__name__)
 
     
-def prompt_conversation(self, user_prompt, store ,language_code=LANGUAGE_DEFAULT):
-    start_time = time.time()
-    logger.info(f"Starting prompt_conversation request - Language: {language_code}")
-    db = None
-
-    try:
-        # Database connection with timeout
-        # db = MongoDB.get_db()
-        db = MongoDB.get_db()
-        logger.debug(
-            f"MongoDB connection established in {time.time() - start_time:.2f}s"
-        )
-
-        # Conversation retrieval
-        existing_conversation = db.conversations.find_one(
-            {"session_id": ""},
-            {"messages": 1, "_id": 0},
-        )
-
-        messages = (
-            existing_conversation.get("messages", [])
-            if existing_conversation
-            else [{"role": "system", "content": FIRST_MESSAGE_PROMPT}]
-        )
-
-        # Add user message
-        messages.append(
-            {
-                "role": "user",
-                "content": user_prompt,
-                "timestamp": datetime.now().isoformat(),
-            }
-        )
-
-        # Vector store retrieval
-        vector_start = time.time()
-        try:
-
-            docs_retrieve = chatbot.brain.query(user_prompt)
-            logger.debug(
-                f"Vector store retrieval completed in {time.time() - vector_start:.2f}s"
-            )
-        except Exception as ve:
-            logger.error(f"Vector store error: {str(ve)}")
-            docs_retrieve = []
-            print(docs_retrieve)
-
-        # OpenAI response generation
-        generation_start = time.time()
-        try:
-            client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"), timeout=OPENAI_TIMEOUT)
-
-            # the history of messages is the context
-            messages_history = messages.copy()
-            if docs_retrieve:
-                context_text = " ".join([doc.page_content for doc in docs_retrieve])
-                messages_history.append(
-                    {"role": "system", "content": f"Relevant context: {context_text}"}
-                )
-
-            response = client.chat.completions.create(
-                model=OPENAI_MODEL,
-                messages=messages_history,
-                temperature=MAX_TEMPERATURE,
-                max_tokens=MAX_TOKENS,
-                timeout=OPENAI_TIMEOUT,
-            )
-            ai_response = response.choices[0].message.content
-            logger.debug(
-                f"AI response generated in {time.time() - generation_start:.2f}s"
-            )
-        except Exception as oe:
-            logger.error(f"OpenAI error: {str(oe)}")
-            raise
-
-        return {
-            "generation": ai_response,
-        }
-
-    except Exception as e:
-        logger.error(f"Error in prompt_conversation: {str(e)}", exc_info=True)
-        raise
-
-
-def i_need_this_knowledge(db,conversation_id, user_prompt,ai_response, confidence_score):
-    document = {
-        "conversation_id": conversation_id,
-        "user_prompt": user_prompt,
-        "generation": ai_response,
-        "confidence_score": confidence_score,
-    }
-    try:
-        db.low_confidence_responses.update_one(
-            {"session_id": conversation_id},
-            {"$set": document},
-            upsert=True
-        )
-    except Exception as me:
-        logger.warning(f"MongoDB error: {str(me)}")
-        raise  
-
-    # Define Formatting Function
-def format_docs(docs):
-    return "\n".join(doc.page_content for doc in docs)
-
 def prompt_conversation_admin(
     user_prompt,
     conversation_id,
@@ -162,7 +62,7 @@ def prompt_conversation_admin(
         messages = (
             existing_conversation.get("messages", [])
             if existing_conversation
-            else [{"role": "system", "content": FIRST_MESSAGE_PROMPT}]
+            else [{"role": "system", "content": FIRST_MESSAGE_PROMPT_SITE}]
         )
 
         # Add user message
@@ -179,10 +79,7 @@ def prompt_conversation_admin(
         docs_retrieve = []
         try:
 
-            if user_prompt.lower().strip() in ["ok", "like", "boss", "yes", "no", "tq", "thanks"]:
-                docs_retrieve = []
-            else:
-                docs_retrieve = chatbot.brain.query(user_prompt)
+            docs_retrieve = chatbot.brain.query(user_prompt)
 
             for i, doc in enumerate(docs_retrieve, start=1):
                 print(f"📌 Result {i}:")
@@ -198,10 +95,8 @@ def prompt_conversation_admin(
             logger.error(f"Vector store error: {str(ve)}")
             docs_retrieve = []
 
-        # OpenAI response generation
         generation_start = time.time()
         try:
-            # Clone conversation history
             messages_history = messages.copy()
 
             static_chunks = chatbot.brain.vector_store.similarity_search(
@@ -217,7 +112,7 @@ def prompt_conversation_admin(
             combined_context = ""
             if all_docs:
                 combined_context += (
-                    "Here's what I found in our Innovation Knowledge Base:\n\n"
+                    "Here's what I found in our vector store:\n\n"
                     + "\n\n---\n\n".join([doc.page_content for doc in all_docs])
                 )
 
@@ -283,6 +178,267 @@ def prompt_conversation_admin(
         logger.error(f"Error in prompt_conversation_admin: {str(e)}", exc_info=True)
         raise
 
+def prompt_conversation_site(
+    user_prompt,
+    conversation_id,
+    language_code=LANGUAGE_DEFAULT,
+):
+
+    logger.info(f"Starting prompt_conversation_site request - Language: {language_code}")
+
+    try:
+        db = MongoDB.get_db()
+
+        existing_conversation = db.conversations.find_one(
+            {"session_id": conversation_id},
+            {"messages": 1, "state": 1, "confirmed_topic": 1, "confirmed_action": 1, "_id": 0},
+        ) or {}
+
+        messages = existing_conversation.get("messages", [{"role": "system", "content": FIRST_MESSAGE_PROMPT}])
+
+        messages.append({
+            "role": "user",
+            "content": user_prompt,
+            "timestamp": datetime.now().isoformat(),
+        })
+
+        conversation_state = existing_conversation.get("state", "identifying_topic")
+        confirmed_topic = existing_conversation.get("confirmed_topic")
+        confirmed_action = existing_conversation.get("confirmed_action")
+
+        if conversation_state == "identifying_topic":
+            confirmed_topic = chatbot.initial_agent.identify_topic(user_prompt)
+
+            if confirmed_topic in chatbot.topics:
+                followup_question = chatbot.initial_agent.client.chat.completions.create(
+                    model="gpt-4-turbo",
+                    messages=[
+                        {"role": "system", "content": f"Casually confirm the user's selected topic '{confirmed_topic}' and ask whether they want to create something new or improve something existing. Be friendly, conversational, and concise."}
+                    ],
+                    temperature=0.7,
+                    max_tokens=60
+                ).choices[0].message.content.strip()
+
+                db.conversations.update_one(
+                    {"session_id": conversation_id},
+                    {"$set": {
+                        "confirmed_topic": confirmed_topic,
+                        "state": "topic_confirmed",
+                        "messages": messages + [{"role": "assistant", "content": followup_question}],
+                        "updated_at": datetime.now().isoformat()
+                    }},
+                    upsert=True
+                )
+
+                return {
+                    "generation": followup_question,
+                    "conversation_id": conversation_id,
+                    "language": language_code,
+                    "confirmation_required": False
+                }
+
+            else:
+                clarifying_question = chatbot.initial_agent.ask_clarifying_question(user_prompt)
+
+                db.conversations.update_one(
+                    {"session_id": conversation_id},
+                    {"$set": {
+                        "state": "identifying_topic",
+                        "messages": messages + [{"role": "assistant", "content": clarifying_question}],
+                        "updated_at": datetime.now().isoformat()
+                    }},
+                    upsert=True
+                )
+
+                return {
+                    "generation": clarifying_question,
+                    "conversation_id": conversation_id,
+                    "language": language_code,
+                    "confirmation_required": True
+                }
+
+        elif conversation_state == "topic_confirmed":
+            confirmed_action = chatbot.initial_agent.determine_next_action(confirmed_topic, user_prompt)
+
+            # Pergunta clara para validar explicitamente a ação com o usuário
+            action_confirmation_question = chatbot.initial_agent.client.chat.completions.create(
+                model="gpt-4-turbo",
+                messages=[
+                    {"role": "system", "content": f"""
+                        Confirm casually and explicitly: Does the user want to '{confirmed_action}' something related to '{confirmed_topic}'?
+                        Ask the user explicitly for confirmation with YES or NO.
+                        Be brief, conversational, and friendly.
+                    """}
+                ],
+                temperature=0.7,
+                max_tokens=60
+            ).choices[0].message.content.strip()
+
+            db.conversations.update_one(
+                {"session_id": conversation_id},
+                {"$set": {
+                    "confirmed_action": confirmed_action,
+                    "state": "awaiting_action_confirmation",
+                    "messages": messages + [{"role": "assistant", "content": action_confirmation_question}],
+                    "updated_at": datetime.now().isoformat()
+                }},
+                upsert=True
+            )
+
+            return {
+                "generation": action_confirmation_question,
+                "conversation_id": conversation_id,
+                "language": language_code,
+                "confirmation_required": True
+            }
+
+        elif conversation_state == "awaiting_action_confirmation":
+            user_confirmation = user_prompt.strip().lower()
+
+            if user_confirmation in ["yes", "yeah", "yep", "correct", "sure"]:
+                # Confirmado claramente, avançar para action_confirmed
+                specialist_question = chatbot.initial_agent.client.chat.completions.create(
+                    model="gpt-4-turbo",
+                    messages=[
+                        {"role": "system", "content": f"""
+                            Enthusiastically acknowledge the user's choice to '{confirmed_action}' regarding '{confirmed_topic}'.
+                            Ask them clearly and naturally to provide more details about their specific goal or requirement.
+                            Keep it brief and friendly.
+                        """}
+                    ],
+                    temperature=0.7,
+                    max_tokens=60
+                ).choices[0].message.content.strip()
+
+                db.conversations.update_one(
+                    {"session_id": conversation_id},
+                    {"$set": {
+                        "state": "action_confirmed",
+                        "messages": messages + [{"role": "assistant", "content": specialist_question}],
+                        "updated_at": datetime.now().isoformat()
+                    }},
+                    upsert=True
+                )
+
+                return {
+                    "generation": specialist_question,
+                    "conversation_id": conversation_id,
+                    "language": language_code,
+                    "confirmation_required": False
+                }
+
+            elif user_confirmation in ["no", "nope", "nah", "incorrect"]:
+                # Não confirmado, pergunta claramente o que deseja
+                retry_question = "Oops, sorry about that! Could you clarify explicitly if you'd like to 'create something new' or 'fix/improve something existing'?"
+
+                db.conversations.update_one(
+                    {"session_id": conversation_id},
+                    {"$set": {
+                        "state": "topic_confirmed",  # volta claramente para determinar novamente
+                        "confirmed_action": None,  # reseta a ação para redeterminar
+                        "messages": messages + [{"role": "assistant", "content": retry_question}],
+                        "updated_at": datetime.now().isoformat()
+                    }},
+                    upsert=True
+                )
+
+                return {
+                    "generation": retry_question,
+                    "conversation_id": conversation_id,
+                    "language": language_code,
+                    "confirmation_required": True
+                }
+
+            else:
+                clarification_response = chatbot.initial_agent.client.chat.completions.create(
+                        model="gpt-4-turbo",
+                            messages=[
+                                {"role": "system", "content": "Apologize casually for misunderstanding and clearly ask the user again if they want to 'create something new' or 'fix/improve something existing'. Keep it brief and friendly."}
+                            ],
+                            temperature=0.7,
+                            max_tokens=60
+                        ).choices[0].message.content.strip()
+
+                db.conversations.update_one(
+                    {"session_id": conversation_id},
+                        {"$set": {
+                                "state": "awaiting_action_confirmation",
+                                "messages": messages + [{"role": "assistant", "content": clarification_response}],
+                                "updated_at": datetime.now().isoformat()
+                        }},
+                            upsert=True
+                        )
+
+                return {
+                            "generation": clarification_response,
+                            "conversation_id": conversation_id,
+                            "language": language_code,
+                            "confirmation_required": True
+                        }
+
+            
+        # Estado ação confirmada: chamar agente especialista
+        elif conversation_state == "action_confirmed":
+
+            specialist_agent = get_specialist_agent(
+                    confirmed_topic, 
+                    OPENAI_API_KEY, 
+                    CHROMA_DIR
+                )
+            
+            specialist_response = specialist_agent.provide_solution(user_prompt, confirmed_action)
+
+            messages.append({
+                "role": "assistant",
+                "content": specialist_response,
+                "timestamp": datetime.now().isoformat()
+            })
+
+            db.conversations.update_one(
+                {"session_id": conversation_id},
+                {"$set": {
+                    "messages": messages,
+                    "updated_at": datetime.now().isoformat()
+                }},
+                upsert=True
+            )
+
+            return {
+                "generation": specialist_response,
+                "conversation_id": conversation_id,
+                "language": language_code,
+                "topic": confirmed_topic,
+                "action": confirmed_action,
+                "confirmation_required": False
+            }
+
+
+        else:
+            logger.warning(f"Unrecognized conversation state '{conversation_state}', resetting to 'identifying_topic'.")
+
+            reset_question = chatbot.initial_agent.ask_clarifying_question(user_prompt)
+
+            db.conversations.update_one(
+                {"session_id": conversation_id},
+                {"$set": {
+                    "state": "identifying_topic",
+                    "messages": messages + [{"role": "assistant", "content": reset_question}],
+                    "updated_at": datetime.now().isoformat()
+                }},
+                upsert=True
+            )
+
+            return {
+                "generation": reset_question,
+                "conversation_id": conversation_id,
+                "language": language_code,
+                "confirmation_required": True
+            }
+
+    except Exception as e:
+        logger.error(f"Error: {str(e)}", exc_info=True)
+        raise
+
 def prompt_conversation_image(
     conversation_id,
     image_base64,
@@ -298,7 +454,7 @@ def prompt_conversation_image(
             "conversation_id": conversation_id,
         }
     except Exception as e:
-        logger.error(f"Error in prompt_conversation_admin: {str(e)}", exc_info=True)
+        logger.error(f"Error in prompt_conversation_site: {str(e)}", exc_info=True)
         raise
 
 def prompt_conversation_agent_ai(
@@ -334,7 +490,7 @@ def prompt_conversation_agent_ai(
             print(docs_retrieve)
 
     except Exception as e:
-        logger.error(f"Error in prompt_conversation_admin: {str(e)}", exc_info=True)
+        logger.error(f"Error in prompt_conversation_site: {str(e)}", exc_info=True)
         raise
 
 
@@ -354,11 +510,7 @@ client = OpenAI(
 
 def prompt_conversation_grok_admin(
     user_prompt,
-    conversation_id,
-    admin_id,
-    bot_id,
-    user_id,
-    language_code="en",
+    conversation_id
 ):
     start_time = time.time()
     logger = logging.getLogger("conversation")
@@ -464,5 +616,5 @@ def prompt_conversation_grok_admin(
             "language": language_code,
         }
     except Exception as e:
-        logger.error(f"Error in prompt_conversation_admin: {str(e)}", exc_info=True)
+        logger.error(f"Error in prompt_conversation_site: {str(e)}", exc_info=True)
         raise
