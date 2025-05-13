@@ -1,121 +1,155 @@
-📌 **Recipe 1: Unlock Innovation**
-**Steps:**
+Follow the Idea Strategy System - Fix something
 
-- **Solution Aikido**: When colleagues or clients request solutions, explore the real motive behind the request.
-- **Time Machine**: Focus work on fulfilling stakeholders' dreams and preventing their nightmares.
-- **Multiverse Map**: Facilitate crucial conversations by creating maps that highlight risks to avoid.
-- **Pivot Triggers**: Clearly define which signals indicate the need to shift from the original plan.
-- **Anatomy of an Insight**: Challenge obvious explanations to uncover hidden assumptions and identify new actionable insights.
+1. Find the Strategy System card.
+2. Answer the questions until it points you to a category.
+3. Use any tactic from that category.
 
-📌 **Recipe 2: Start On Easy Mode**
-**Steps:**
+{
+"idea_strategy_system": [
+{
+"question": "Is your creative challenge crystal clear?",
+"yes": {
+"question": "Have you thought-provoking material ready to inspire you?",
+"yes": {
+"question": "Do you already have some ideas?",
+"yes": {
+"question": "Do any of them excite or surprise you?",
+"yes": {
+"question": "Have you described your most interesting ideas in detail?",
+"yes": {
+"question": "Do you know what to prioritise?",
+"yes": {
+"action": "Make something real and get feedback"
+},
+"no": {
+"subject": "Review"
+}
+},
+"no": {
+"subject": "Refine"
+}
+},
+"no": {
+"subject": "Stretch"
+}
+},
+"no": {
+"subject": "Diverge"
+}
+},
+"no": {
+"subject": "Explore"
+}
+},
+"no": {
+"subject": "Frame"
+}
+}
+]
+}
 
-- **Diagnostic 'Shop Along'**: Observe someone using an existing product or service (possibly your own).
-- **Human Story Map**: Document detailed steps of the current user experience and select one step to improve.
-- **Punchy Prototypes**: In 15 minutes, create a simple, word-based prototype of the selected step.
-- **'Huh?' Test**: Invite people to review your prototype and point out areas of confusion.
-- **Anatomy of an Insight**: Interpret feedback, refine the prototype, and test again.
+Follow a Recipe - Create new stuff
 
-📌 **Recipe 3: Opportunity Mining**
-**Steps:**
+1. Find the cards in the Recipe category.
+2. Choose one that matches your goals.
+3. Use the tactics cards recommended in that Recipe.
 
-- **Real Needs**: Identify concrete efforts indicating real needs and innovation opportunities.
-- **Radical Repurposing**: Notice people solving problems in unexpected, imaginative ways.
-- **Recruitment Probe**: Check if the identified need is urgent enough that people eagerly discuss it.
-- **Documentary Conversation**: Document detailed impacts of the need on people's lives.
-- **CSI Pinboard**: Spot patterns emerging from multiple user conversations.
+{
+"idea_tactics_recipes": [
+{
+"recipe_name": "Push It",
+"duration": "2 hours",
+"steps": [
+{"step_number": 1, "step_name": "Mind Map", "instruction": "Map the different elements of the thing you want to improve."},
+{"step_number": 2, "step_name": "Crazy Eights", "instruction": "Explore options for improvement."},
+{"step_number": 3, "step_name": "Invest Your PipCoins", "instruction": "Decide which ideas offer big rewards at acceptable risk."},
+{"step_number": 4, "step_name": "Peak-End Rule", "instruction": "Identify and elevate key moments in your exciting idea."},
+{"step_number": 5, "step_name": "Back and Forth", "instruction": "Get clear on key steps in your upgraded idea."}
+]
+},
+{
+"recipe_name": "What Next?",
+"duration": "2 hours",
+"steps": [
+{"step_number": 1, "step_name": "Make a Meme", "instruction": "Communicate your opportunity simply and profoundly."},
+{"step_number": 2, "step_name": "6-3-5", "instruction": "Generate many creative directions quickly."},
+{"step_number": 3, "step_name": "Crazy Eights", "instruction": "Thoughtfully explore selected ideas."},
+{"step_number": 4, "step_name": "Yes, and...", "instruction": "Push your ideas further."},
+{"step_number": 5, "step_name": "T-Bar", "instruction": "Refine ideas practical enough to prototype."},
+{"step_number": 6, "step_name": "PrioriTree", "instruction": "Distil and decide what to try first."}
+]
+},
+{
+"recipe_name": "Fantasies of the Future",
+"duration": "3 hours",
+"steps": [
+{"step_number": 1, "step_name": "Combinaboard", "instruction": "Visualise problems or intriguing trends."},
+{"step_number": 2, "step_name": "Mash-Up", "instruction": "Find novel connections for fresh ideas."},
+{"step_number": 3, "step_name": "Human Truths", "instruction": "Reflect on timeless qualities for your ideas."},
+{"step_number": 4, "step_name": "T-Bar", "instruction": "Capture interesting ideas from earlier steps."},
+{"step_number": 5, "step_name": "Big Beats", "instruction": "Tell a dynamic future-focused story."},
+{"step_number": 6, "step_name": "Like, Wish, Wonder", "instruction": "Share ideas to get others invested."}
+]
+},
+{
+"recipe_name": "Get to Fully-Baked",
+"duration": "2 hours",
+"steps": [
+{"step_number": 1, "step_name": "Fence the Playground", "instruction": "Set deliberate constraints for easier idea development."},
+{"step_number": 2, "step_name": "6-3-5", "instruction": "Generate 100 possible names for your idea."},
+{"step_number": 3, "step_name": "Storyboard", "instruction": "Sketch key idea moments in 6 steps."},
+{"step_number": 4, "step_name": "Yes, and...", "instruction": "Push best elements further."},
+{"step_number": 5, "step_name": "Concerns, Confusions, Conflicts", "instruction": "Stress-test your idea."},
+{"step_number": 6, "step_name": "T-Bar", "instruction": "Clearly capture your idea."}
+]
+},
+{
+"recipe_name": "Be Distinctive",
+"duration": "1 day",
+"steps": [
+{"step_number": 1, "step_name": "Worst Idea Race", "instruction": "Aim for ridiculous ideas."},
+{"step_number": 2, "step_name": "Yes, and...", "instruction": "Build on ideas to discover possibilities."},
+{"step_number": 3, "step_name": "T-Bar", "instruction": "Detail promising ideas."},
+{"step_number": 4, "step_name": "Analogous Inspiration", "instruction": "Look outside for standout ideas."},
+{"step_number": 5, "step_name": "Lotus Blossoms", "instruction": "Explore fresh ideas from observations."},
+{"step_number": 6, "step_name": "SICFAM", "instruction": "Rank ideas to find the gold."}
+]
+},
+{
+"recipe_name": "Debate Club",
+"duration": "3 hours",
+"steps": [
+{"step_number": 1, "step_name": "Fame vs Shame", "instruction": "Encourage debate."},
+{"step_number": 2, "step_name": "Crazy Eights", "instruction": "Generate and select ideas."},
+{"step_number": 3, "step_name": "Like/Not Like", "instruction": "Refine your idea through comparison."},
+{"step_number": 4, "step_name": "ProvocaPrompts", "instruction": "Confront tough questions."},
+{"step_number": 5, "step_name": "Angels and Demons", "instruction": "Debate potential success and failure."}
+]
+}
+]
+}
 
-📌 **Recipe 4: Idea Filter**
-**Steps:**
-
-- **10-Star Experience**: Imagine magical experiences surpassing customers' wildest expectations.
-- **Box Clever**: Present each idea as packaged and shelf-ready.
-- **Solve For Distribution**: Craft narratives explaining how customers discover and use each idea.
-- **Pitch Provocations**: Pitch ideas to real customers to gauge genuine reactions.
-- **2D Comparison**: Arrange ideas on a 2x2 matrix of "customer value" vs. "fit for us."
-
-📌 **Recipe 5: Probe-Based Innovation**
-**Steps:**
-
-- **Time Machine**: Identify hidden goals and critical risks worrying your team.
-- **Multiverse Map**: Detail specific good and bad future scenarios for significant risks.
-- **Pivot Triggers**: Clearly define signals indicating progression towards undesirable outcomes.
-- **Behavioural Probe**: Launch a simple, manual version of your idea to gather essential signals.
-- **Anatomy of an Insight**: Clearly understand collected signals to confidently adjust or move forward.
-
-📌 **Recipe 6: Chasm Crossing**
-**Steps:**
-
-- Use **Pain X-Ray** and **Radical Repurposing** to highlight initial opportunities.
-- Conduct small experiments using **Hard Test, Easy Life** focused on real needs.
-- Reframe your idea with **Language Market Fit** and remove barriers using **Four Forces**.
-- Use **Diagnostic 'Shop Along'** for safe, incremental optimizations during mass adoption.
-
-📌 **Recipe 7: Seeds vs Soil**
-**Steps:**
-
-- List important decisions to be made.
-- Differentiate decisions that can be made with certainty (soil) from those validated only through action (seeds).
-- First focus on critical seeds using rapid and practical tests.
-
-📌 **Recipe 8: Hard Test, Easy Life**
-**Steps:**
-
-- Identify key moments of the customer experience with your innovation.
-- Test an extremely simplified, manual version for the most challenging moments.
-- Evaluate results and quickly refine until fully understanding correct implementation.
-
-📌 **Recipe 9: Complexity Heatmap**
-**Steps:**
-
-- List critical elements needing resolution in your innovation.
-- Color-code elements based on uncertainty or unknowns.
-- Prioritize highest uncertainty areas first to mitigate risk.
-
-📌 **Recipe 10: Solve for Distribution**
-**Steps:**
-
-- Write a detailed narrative about how users discover your innovation (distribution story).
-- Write another detailed narrative about how users engage and benefit from your innovation (usage story).
-- Evaluate coherence and plausibility of these stories, refining until they become compelling and credible.
-
-📌 **Recipe 11: Be The Algorithm**
-**Steps:**
-
-- Manually simulate your innovation's operations before automating.
-- Identify flaws and quickly refine the experience through direct interactions with real users.
-- Once the manual experience stabilizes, confidently automate.
-
-📌 **Recipe 12: Language Market Fit**
-**Steps:**
-
-- Create multiple short, specific texts introducing your innovation.
-- Test these texts with real people, selecting the most appealing ones.
-- Validate the best versions using simple advertisements to measure clicks and real interest.
-
-📌 **Key Concepts**
- Situation
-Understand the reality of the world you’re dealing
-with and the people within it, so you can spot
-opportunities for innovation.
- Ideas
-Come up with surprising new ideas for products,
-services or experiences, using exercises that
-stimulate your creativity.
- Focus
-Enable yourself to start with the riskiest aspect of
-an idea. Then, if you need to adapt, you’ll have the
-leeway to take more ‘shots’ and find success.
- Signals
-Identify which type(s) of signals you’d need to see
-to feel confident that your innovation will succeed.
- Probe
-Poke the world for the signals you need. How have
-(or haven’t) real humans changed their behaviour as
-a result of something you put out there?
- Sense
-Generate actionable insights from the signals you
-gathered. Then you can either adapt your plans, or
-move forward with confidence and momentum.
- Support
-Core methods for innovation.
+Key Concepts
+Prime
+Ready your body and mind to make creative leaps.
+Frame
+Describe your challenge and draw the boundaries
+of your creative playground.
+Explore
+See existing insights with fresh, bright, wide-open
+eyes, and create artefacts to inspire ideas.
+Diverge
+Go wide – approach your challenge from different
+angles and generate lots of potential directions.
+Stretch
+Push your ideas further without losing sight of
+what matters.
+Refine
+Add detail and depth to your strongest ideas.
+Review
+Get meaningful feedback, identify the most
+compelling elements of your ideas, and decide
+which ideas to pursue.
+Cheatsheet
+Get more out of your creative process with mindful
+planning, preparation and facilitation.

@@ -38,6 +38,8 @@ class MaxAgent:
 
       prompt = f"""
       You are Max, a friendly and informal consultant having a casual, brief phone conversation. 
+      You are from Tawan
+
       You quickly glanced at some notes from colleagues about branding, storytelling, team management, ideas, strategy, workshops, and innovation.
 
       Here is an example of the conversational style you should always use:
@@ -54,13 +56,13 @@ class MaxAgent:
       
       combined_context: "{combined_context}"
       """
-
+      logger.info(f"MaxAgent prompt: {prompt}")
       try:
           response = self.client.chat.completions.create(
               model="gpt-4-turbo",
               messages=[{"role": "system", "content": prompt}],
               temperature=0.9,  # bem espontâneo
-              max_tokens=50     # curta resposta (~1-2 frases curtas)
+              max_tokens=150     # curta resposta (~1-2 frases curtas)
           )
           return response.choices[0].message.content.strip()
 

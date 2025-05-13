@@ -156,12 +156,9 @@ class Brain:
         collection = client.get_or_create_collection(name=self.collection_name)
         return collection.count()
 
-    def query(self, query: str, k: int = 4):
+    def query(self, query: str, k: int = 3):
         return self.vector_store.similarity_search(query, k=k)
     
-
-
-
 
     '''
  def load_and_process_json_file(self) -> List[dict]:

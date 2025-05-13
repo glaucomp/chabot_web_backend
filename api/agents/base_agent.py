@@ -18,16 +18,16 @@ class BaseAgent:
         file_name = f"{brain_collection}.markdown"
         file_path = os.path.join(base_dir, file_name)
 
-        logger.info(f"Verificando o brain em: {file_path}")
+        logger.info(f"Brain '{brain_collection}' file path: {file_path}")
 
         if self.brain._check_collection_count() == 0:
-            logger.info(f"Brain '{brain_collection}' vazio. Carregando dados...")
+            logger.info(f"Brain '{brain_collection}' empty, loading...")
             rules_chunks = self.brain._load_and_chunk_rules(file_path)
             all_docs = self.brain.prepare_brain_documents(rules_chunks)
             self.brain.vector_store.add_documents(all_docs)
-            logger.info(f"{len(all_docs)} documentos carregados no brain '{brain_collection}'.")
+            logger.info(f"{len(all_docs)} documents loaded into the brain '{brain_collection}'.")
         else:
-            logger.info(f"Brain '{brain_collection}' has loaded before.")
+            logger.info(f"Brain '{brain_collection}' has loaded with {self.brain._check_collection_count()} documents.")
 
     def provide_solution(self, user_message, action):
         docs = self.brain.query(user_message, k=3)

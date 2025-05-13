@@ -20,8 +20,8 @@ class InitialAgent:
             messages=[
                 {"role": "system", "content": classification_prompt}
             ],
-            temperature=0.0,  # mais precisão
-            max_tokens=10
+            temperature=0.0,
+            max_tokens=150
         )
 
         topic = response.choices[0].message.content.strip()
@@ -47,7 +47,7 @@ class InitialAgent:
         Respond with ONLY "fix" or "create".
         """
 
-        response = self.client.chat.completions.create(  # Método atualizado aqui
+        response = self.client.chat.completions.create(
             model="gpt-4-turbo",
             messages=[
                 {"role": "system", "content": "Classify user requests strictly into 'fix' or 'create'."},
@@ -73,6 +73,8 @@ class InitialAgent:
           - Do NOT use the word 'tactics'.
           - Casually reference or hint at these areas without explicitly listing them all at once.
           - Keep your clarifying question short, friendly, conversational, and relevant to the user's message.
+          - Don't use the same words in the response as in the user's message.
+
 
           Respond only with your clarifying question.
         """
@@ -80,7 +82,7 @@ class InitialAgent:
         response = self.client.chat.completions.create(
               model="gpt-4-turbo",
               messages=[{"role": "system", "content": prompt}],
-              temperature=0.7,  # maior temperatura gera mais variação
+              temperature=0.7,
               max_tokens=60
           )
 

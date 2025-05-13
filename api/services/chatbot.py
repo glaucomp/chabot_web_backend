@@ -34,8 +34,8 @@ class ChatBot:
 
         logger.info("Initializing ChatBot...")
         try:
-            self.brain = Brain("what_to_say", CHROMA_DIR)
-            self.vector_store = self.brain.vector_store
+            # self.brain = Brain("what_to_say", CHROMA_DIR)
+            # self.vector_store = self.brain.vector_store
             self.llm = ChatOpenAI(model=CHAT_MODEL, api_key=OPENAI_API_KEY, temperature=0.5)
             self.prompt = hub.pull("rlm/rag-prompt")
             self.client = OpenAI(api_key=OPENAI_API_KEY) 

@@ -1,121 +1,161 @@
-📌 **Recipe 1: Unlock Innovation**
-**Steps:**
+Follow the Strategy System - Fix something
 
-- **Solution Aikido**: When colleagues or clients request solutions, explore the real motive behind the request.
-- **Time Machine**: Focus work on fulfilling stakeholders' dreams and preventing their nightmares.
-- **Multiverse Map**: Facilitate crucial conversations by creating maps that highlight risks to avoid.
-- **Pivot Triggers**: Clearly define which signals indicate the need to shift from the original plan.
-- **Anatomy of an Insight**: Challenge obvious explanations to uncover hidden assumptions and identify new actionable insights.
+1. Find the Strategy System card.
+2. Answer the questions until it points you to a category.
+3. Use any tactic from that category.
 
-📌 **Recipe 2: Start On Easy Mode**
-**Steps:**
+{
+"strategy_system": [
+{
+"question": "Do you have a clear idea of what you should be working on, and why?",
+"yes": {
+"question": "Are you aware of all the moving parts of what you’re working on?",
+"yes": {
+"question": "Do you know exactly how the parts combine to create value?",
+"yes": {
+"question": "Do you know where things are headed by default?",
+"yes": {
+"question": "Do you know how to adapt and thrive?",
+"yes": {
+"question": "Do you know how to win?",
+"yes": {
+"question": "Does everyone know what to do?",
+"yes": {
+"action": "Take action, learn from what happens and go again!"
+},
+"no": {
+"subject": "Lead"
+}
+},
+"no": {
+"subject": "Plays"
+}
+},
+"no": {
+"subject": "Adapt"
+}
+},
+"no": {
+"subject": "Evolve"
+}
+},
+"no": {
+"subject": "Connect"
+}
+},
+"no": {
+"subject": "Identify"
+}
+},
+"no": {
+"subject": "Purpose"
+}
+}
+]
+}
 
-- **Diagnostic 'Shop Along'**: Observe someone using an existing product or service (possibly your own).
-- **Human Story Map**: Document detailed steps of the current user experience and select one step to improve.
-- **Punchy Prototypes**: In 15 minutes, create a simple, word-based prototype of the selected step.
-- **'Huh?' Test**: Invite people to review your prototype and point out areas of confusion.
-- **Anatomy of an Insight**: Interpret feedback, refine the prototype, and test again.
+Follow a Recipe - Create new stuff
 
-📌 **Recipe 3: Opportunity Mining**
-**Steps:**
+1. Find the cards in the Recipe category.
+2. Choose one that matches your goals.
+3. Use the tactics cards recommended in that Recipe.
 
-- **Real Needs**: Identify concrete efforts indicating real needs and innovation opportunities.
-- **Radical Repurposing**: Notice people solving problems in unexpected, imaginative ways.
-- **Recruitment Probe**: Check if the identified need is urgent enough that people eagerly discuss it.
-- **Documentary Conversation**: Document detailed impacts of the need on people's lives.
-- **CSI Pinboard**: Spot patterns emerging from multiple user conversations.
+{
+"strategy_recipes": [
+{
+"recipe_name": "Small-Batch Strategy",
+"duration": "Lightweight process",
+"description": "Forget annual planning! Run this lightweight process as often as needed to respond quickly to change.",
+"steps": [
+{"step_number": 1, "step_name": "Complaint Department", "instruction": "Find problems and prioritize them."},
+{"step_number": 2, "step_name": "Default Disaster", "instruction": "Imagine consequences of unaddressed problems."},
+{"step_number": 3, "step_name": "Tripwires", "instruction": "Set early warnings for potential disasters."},
+{"step_number": 4, "step_name": "Feasible Futures", "instruction": "Define desirable future scenarios without today's constraints."},
+{"step_number": 5, "step_name": "Better Now", "instruction": "Create an improved present enabling multiple good futures."}
+]
+},
+{
+"recipe_name": "Call & Response",
+"description": "Help people understand and get involved in strategy creation.",
+"steps": [
+{"step_number": 1, "step_name": "Give Me A Reason", "instruction": "Articulate the purpose behind your strategy."},
+{"step_number": 2, "step_name": "Measure Twice", "instruction": "Scrutinize assumptions rigorously."},
+{"step_number": 3, "step_name": "Challenge Statement", "instruction": "Clearly articulate your next challenge."},
+{"step_number": 4, "step_name": "Backbrief", "instruction": "Rehearse actions to uncover early issues."},
+{"step_number": 5, "step_name": "Decision Diary", "instruction": "Record and review decision outcomes for learning."}
+]
+},
+{
+"recipe_name": "The Basics",
+"description": "Gather essential foundational information for strategic clarity.",
+"steps": [
+{"step_number": 1, "step_name": "Human Network", "instruction": "Identify stakeholders clearly."},
+{"step_number": 2, "step_name": "Promise Proposal", "instruction": "Define promises made and assess fulfillment."},
+{"step_number": 3, "step_name": "Seeking Specifics", "instruction": "Identify and assess essential operational elements."},
+{"step_number": 4, "step_name": "Value Chain", "instruction": "Visualize connections and outcomes."},
+{"step_number": 5, "step_name": "Market Evolution", "instruction": "Integrate external market insights."}
+]
+},
+{
+"recipe_name": "Eat An Elephant",
+"description": "Handle complex situations incrementally.",
+"steps": [
+{"step_number": 1, "step_name": "Name Your Game", "instruction": "Define your primary motivation clearly."},
+{"step_number": 2, "step_name": "Open-Source Intelligence", "instruction": "Review existing relevant documentation."},
+{"step_number": 3, "step_name": "Mystery Machine", "instruction": "Deep dive into a key aspect."},
+{"step_number": 4, "step_name": "Fog Of Work", "instruction": "Expand research from initial findings."},
+{"step_number": 5, "step_name": "Five Whats", "instruction": "Identify underlying foundational elements."}
+]
+},
+{
+"recipe_name": "Wardley Map",
+"description": "Map situations to clearly identify next strategic moves.",
+"steps": [
+{"step_number": 1, "step_name": "Gather Basics", "instruction": "List users, needs, and capabilities clearly."},
+{"step_number": 2, "step_name": "Value Chain", "instruction": "Define dependency connections."},
+{"step_number": 3, "step_name": "Market Evolution", "instruction": "Categorize elements based on market stages."},
+{"step_number": 4, "step_name": "Strategic Development", "instruction": "Use map insights to drive strategic conversations."}
+]
+},
+{
+"recipe_name": "Ready For Trouble",
+"description": "Identify and mitigate common strategic threats.",
+"steps": [
+{"step_number": 1, "step_name": "Lack of Purpose", "instruction": "Ensure meaningful work."},
+{"step_number": 2, "step_name": "Complacence", "instruction": "Challenge comfort zones actively."},
+{"step_number": 3, "step_name": "Big-Bang Change", "instruction": "Adopt incremental changes."},
+{"step_number": 4, "step_name": "Unconscious Growth", "instruction": "Maintain grounded, sustainable growth."},
+{"step_number": 5, "step_name": "Disruption", "instruction": "Prepare for predictable and unpredictable market shifts."}
+]
+},
+{
+"recipe_name": "Just Right",
+"description": "Select optimal tools and methods for strategic clarity.",
+"steps": [
+{"step_number": 1, "step_name": "Why DIY?", "instruction": "Assess building vs buying."},
+{"step_number": 2, "step_name": "Shift Gears", "instruction": "Choose suitable methodologies."},
+{"step_number": 3, "step_name": "Buyer’s Remorse", "instruction": "Establish clear terms and expectations."},
+{"step_number": 4, "step_name": "Adjustable Attitudes", "instruction": "Align team members with suitable work methods."},
+{"step_number": 5, "step_name": "Experiment Methods", "instruction": "Choose appropriate experiment types."}
+]
+}
+]
+}
 
-📌 **Recipe 4: Idea Filter**
-**Steps:**
-
-- **10-Star Experience**: Imagine magical experiences surpassing customers' wildest expectations.
-- **Box Clever**: Present each idea as packaged and shelf-ready.
-- **Solve For Distribution**: Craft narratives explaining how customers discover and use each idea.
-- **Pitch Provocations**: Pitch ideas to real customers to gauge genuine reactions.
-- **2D Comparison**: Arrange ideas on a 2x2 matrix of "customer value" vs. "fit for us."
-
-📌 **Recipe 5: Probe-Based Innovation**
-**Steps:**
-
-- **Time Machine**: Identify hidden goals and critical risks worrying your team.
-- **Multiverse Map**: Detail specific good and bad future scenarios for significant risks.
-- **Pivot Triggers**: Clearly define signals indicating progression towards undesirable outcomes.
-- **Behavioural Probe**: Launch a simple, manual version of your idea to gather essential signals.
-- **Anatomy of an Insight**: Clearly understand collected signals to confidently adjust or move forward.
-
-📌 **Recipe 6: Chasm Crossing**
-**Steps:**
-
-- Use **Pain X-Ray** and **Radical Repurposing** to highlight initial opportunities.
-- Conduct small experiments using **Hard Test, Easy Life** focused on real needs.
-- Reframe your idea with **Language Market Fit** and remove barriers using **Four Forces**.
-- Use **Diagnostic 'Shop Along'** for safe, incremental optimizations during mass adoption.
-
-📌 **Recipe 7: Seeds vs Soil**
-**Steps:**
-
-- List important decisions to be made.
-- Differentiate decisions that can be made with certainty (soil) from those validated only through action (seeds).
-- First focus on critical seeds using rapid and practical tests.
-
-📌 **Recipe 8: Hard Test, Easy Life**
-**Steps:**
-
-- Identify key moments of the customer experience with your innovation.
-- Test an extremely simplified, manual version for the most challenging moments.
-- Evaluate results and quickly refine until fully understanding correct implementation.
-
-📌 **Recipe 9: Complexity Heatmap**
-**Steps:**
-
-- List critical elements needing resolution in your innovation.
-- Color-code elements based on uncertainty or unknowns.
-- Prioritize highest uncertainty areas first to mitigate risk.
-
-📌 **Recipe 10: Solve for Distribution**
-**Steps:**
-
-- Write a detailed narrative about how users discover your innovation (distribution story).
-- Write another detailed narrative about how users engage and benefit from your innovation (usage story).
-- Evaluate coherence and plausibility of these stories, refining until they become compelling and credible.
-
-📌 **Recipe 11: Be The Algorithm**
-**Steps:**
-
-- Manually simulate your innovation's operations before automating.
-- Identify flaws and quickly refine the experience through direct interactions with real users.
-- Once the manual experience stabilizes, confidently automate.
-
-📌 **Recipe 12: Language Market Fit**
-**Steps:**
-
-- Create multiple short, specific texts introducing your innovation.
-- Test these texts with real people, selecting the most appealing ones.
-- Validate the best versions using simple advertisements to measure clicks and real interest.
-
-📌 **Key Concepts**
- Situation
-Understand the reality of the world you’re dealing
-with and the people within it, so you can spot
-opportunities for innovation.
- Ideas
-Come up with surprising new ideas for products,
-services or experiences, using exercises that
-stimulate your creativity.
- Focus
-Enable yourself to start with the riskiest aspect of
-an idea. Then, if you need to adapt, you’ll have the
-leeway to take more ‘shots’ and find success.
- Signals
-Identify which type(s) of signals you’d need to see
-to feel confident that your innovation will succeed.
- Probe
-Poke the world for the signals you need. How have
-(or haven’t) real humans changed their behaviour as
-a result of something you put out there?
- Sense
-Generate actionable insights from the signals you
-gathered. Then you can either adapt your plans, or
-move forward with confidence and momentum.
- Support
-Core methods for innovation.
+Key Concepts
+Purpose
+Find out why you should even bother, then decide what you want to accomplish.
+Identify
+Make any situation discussable by breaking it down into clear whos and whats.
+Connect
+Find out how all the pieces fit together to learn how the whole thing works.
+Evolve
+Embrace market movement, so you can go with the f low – instead of crashing into it.
+Adapt
+Change your behavior so you can thrive within a challenging, competitive environment.
+Plays
+Change the environment itself until it meets your needs.
+Lead
+Be clear, do the right thing and help others contribute their best.
+Recipe
+Good strategy is a game changer. Discover new possibilities by combining different tactics.

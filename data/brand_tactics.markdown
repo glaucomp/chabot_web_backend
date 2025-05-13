@@ -1,121 +1,186 @@
-📌 **Recipe 1: Unlock Innovation**
-**Steps:**
+Follow the Brand Strategy System - Fix something
 
-- **Solution Aikido**: When colleagues or clients request solutions, explore the real motive behind the request.
-- **Time Machine**: Focus work on fulfilling stakeholders' dreams and preventing their nightmares.
-- **Multiverse Map**: Facilitate crucial conversations by creating maps that highlight risks to avoid.
-- **Pivot Triggers**: Clearly define which signals indicate the need to shift from the original plan.
-- **Anatomy of an Insight**: Challenge obvious explanations to uncover hidden assumptions and identify new actionable insights.
+1. Read the Brand Strategy System card to help you
+   determine which tactic to use.
+2. Read the suggestions at the bottom of your chosen
+   card. You may find there is another tactic that would
+   be good to run beforehand, or afterwards.
+3. Follow the steps on the back of the card.
 
-📌 **Recipe 2: Start On Easy Mode**
-**Steps:**
+{
+"brand_strategy_system": [
+{
+"question": "Do you understand the dynamics of your market?",
+"yes": {
+"question": "Do you understand the advantages of your business?",
+"yes": {
+"question": "Does your business have a unique strategy?",
+"yes": {
+"question": "Has your strategy been proven to work?",
+"yes": {
+"question": "Do you know how to execute?",
+"yes": {
+"question": "Are you taking it as far as you can?",
+"yes": {
+"action": "Get to work! But revisit this system often to stay on track."
+},
+"no": {
+"subject": "Double Down"
+}
+},
+"no": {
+"subject": "Execution"
+}
+},
+"no": {
+"subject": "Judgement"
+}
+},
+"no": {
+"subject": "Strategy"
+}
+},
+"no": {
+"subject": "Introspection"
+}
+},
+"no": {
+"subject": "Context"
+}
+}
+]
+}
 
-- **Diagnostic 'Shop Along'**: Observe someone using an existing product or service (possibly your own).
-- **Human Story Map**: Document detailed steps of the current user experience and select one step to improve.
-- **Punchy Prototypes**: In 15 minutes, create a simple, word-based prototype of the selected step.
-- **'Huh?' Test**: Invite people to review your prototype and point out areas of confusion.
-- **Anatomy of an Insight**: Interpret feedback, refine the prototype, and test again.
+Follow a Recipe - Create new stuff
 
-📌 **Recipe 3: Opportunity Mining**
-**Steps:**
+1. Find the cards in the Recipe category.
+2. Choose one that matches your goals.
+3. Use the tactics cards recommended in that Recipe.
 
-- **Real Needs**: Identify concrete efforts indicating real needs and innovation opportunities.
-- **Radical Repurposing**: Notice people solving problems in unexpected, imaginative ways.
-- **Recruitment Probe**: Check if the identified need is urgent enough that people eagerly discuss it.
-- **Documentary Conversation**: Document detailed impacts of the need on people's lives.
-- **CSI Pinboard**: Spot patterns emerging from multiple user conversations.
+{
+"brand_tactics_recipes": [
+{
+"recipe_name": "Strategy Super-System",
+"duration": "6–10 hours",
+"description": "Rapidly develop a unique and powerful value offering to build your whole brand around. The heart of this deck—and the heart of all brands—is a powerful strategic value offering. Know what you offer and how it’s different, then bring it to people with style.",
+"steps": [
+{
+"step_number": 1,
+"step_name": "The True Competitor",
+"instruction": "Start by getting clear on who you're really up against—both direct and indirect competitors."
+},
+{
+"step_number": 2,
+"step_name": "Only Is Better Than Best",
+"instruction": "Gather a list of ways you are genuinely different to your competitors."
+},
+{
+"step_number": 3,
+"step_name": "Value Mining",
+"instruction": "Translate those differences into consumer value—the essence of your strategic offering."
+},
+{
+"step_number": 4,
+"step_name": "Contrarian Value",
+"instruction": "Identify a value that isn’t only different from your competitors but also goes against them."
+},
+{
+"step_number": 5,
+"step_name": "The Challenger Trap",
+"instruction": "Judge the strategy you've created with a simple-yet-thorough check against your competitors."
+}
+]
+},
+{
+"recipe_name": "Keep On Truckin'",
+"duration": "2–4 days",
+"description": "An annual review to keep your brand fresh, on-strategy, and continuously deepening its appeal. Iconic brands aren’t built overnight—they take discipline and inspiration stretched over many years.",
+"prerequisites": "Use when you have developed and executed your strategy with Execution tactics like Minimum Viable Strategy.",
+"steps": [
+{
+"step_number": 1,
+"step_name": "The Dolly Score",
+"instruction": "Analyse your successes and failures to learn how your brand is being received."
+},
+{
+"step_number": 2,
+"step_name": "Word On The Street",
+"instruction": "Review the world's understanding of your brand to ensure it aligns with your own."
+},
+{
+"step_number": 3,
+"step_name": "Hamster Wheel",
+"instruction": "Review major market or cultural changes that may be strategically relevant."
+},
+{
+"step_number": 4,
+"step_name": "Brand-Led Growth",
+"instruction": "Explore potential new products or services arising from your strategy in the current climate."
+},
+{
+"step_number": 5,
+"step_name": "Brand Stretch",
+"instruction": "Have some fun brainstorming the most creative and ambitious ways to bring your brand to life."
+}
+]
+},
+{
+"recipe_name": "Icon Builder",
+"duration": "9–12 hours",
+"description": "Take extraordinary creative leaps that only the most elite brands attempt—and become immortal. These tactics are for when you’ve mastered the basics and want to accelerate from merely 'solid' to 'stratospheric'.",
+"prerequisites": "Use when you're sure you've nailed your Power Platform and Minimum Viable Strategy.",
+"steps": [
+{
+"step_number": 1,
+"step_name": "The Philosopher",
+"instruction": "Expand your brand’s horizons by identifying a bigger topic it can become associated with."
+},
+{
+"step_number": 2,
+"step_name": "Look At Me!",
+"instruction": "Understand what your brand says about the people who use it."
+},
+{
+"step_number": 3,
+"step_name": "The Creative Canvas",
+"instruction": "Look across your business to find creative ways of applying the big ideas you've identified."
+},
+{
+"step_number": 4,
+"step_name": "One Stupid Thing",
+"instruction": "Search for one bold move you can make that none of your competitors would dare to copy."
+},
+{
+"step_number": 5,
+"step_name": "Brand Stretch",
+"instruction": "Embrace pure creative expression—where would you go if there were no limits?"
+}
+]
+}
+]
+}
 
-📌 **Recipe 4: Idea Filter**
-**Steps:**
-
-- **10-Star Experience**: Imagine magical experiences surpassing customers' wildest expectations.
-- **Box Clever**: Present each idea as packaged and shelf-ready.
-- **Solve For Distribution**: Craft narratives explaining how customers discover and use each idea.
-- **Pitch Provocations**: Pitch ideas to real customers to gauge genuine reactions.
-- **2D Comparison**: Arrange ideas on a 2x2 matrix of "customer value" vs. "fit for us."
-
-📌 **Recipe 5: Probe-Based Innovation**
-**Steps:**
-
-- **Time Machine**: Identify hidden goals and critical risks worrying your team.
-- **Multiverse Map**: Detail specific good and bad future scenarios for significant risks.
-- **Pivot Triggers**: Clearly define signals indicating progression towards undesirable outcomes.
-- **Behavioural Probe**: Launch a simple, manual version of your idea to gather essential signals.
-- **Anatomy of an Insight**: Clearly understand collected signals to confidently adjust or move forward.
-
-📌 **Recipe 6: Chasm Crossing**
-**Steps:**
-
-- Use **Pain X-Ray** and **Radical Repurposing** to highlight initial opportunities.
-- Conduct small experiments using **Hard Test, Easy Life** focused on real needs.
-- Reframe your idea with **Language Market Fit** and remove barriers using **Four Forces**.
-- Use **Diagnostic 'Shop Along'** for safe, incremental optimizations during mass adoption.
-
-📌 **Recipe 7: Seeds vs Soil**
-**Steps:**
-
-- List important decisions to be made.
-- Differentiate decisions that can be made with certainty (soil) from those validated only through action (seeds).
-- First focus on critical seeds using rapid and practical tests.
-
-📌 **Recipe 8: Hard Test, Easy Life**
-**Steps:**
-
-- Identify key moments of the customer experience with your innovation.
-- Test an extremely simplified, manual version for the most challenging moments.
-- Evaluate results and quickly refine until fully understanding correct implementation.
-
-📌 **Recipe 9: Complexity Heatmap**
-**Steps:**
-
-- List critical elements needing resolution in your innovation.
-- Color-code elements based on uncertainty or unknowns.
-- Prioritize highest uncertainty areas first to mitigate risk.
-
-📌 **Recipe 10: Solve for Distribution**
-**Steps:**
-
-- Write a detailed narrative about how users discover your innovation (distribution story).
-- Write another detailed narrative about how users engage and benefit from your innovation (usage story).
-- Evaluate coherence and plausibility of these stories, refining until they become compelling and credible.
-
-📌 **Recipe 11: Be The Algorithm**
-**Steps:**
-
-- Manually simulate your innovation's operations before automating.
-- Identify flaws and quickly refine the experience through direct interactions with real users.
-- Once the manual experience stabilizes, confidently automate.
-
-📌 **Recipe 12: Language Market Fit**
-**Steps:**
-
-- Create multiple short, specific texts introducing your innovation.
-- Test these texts with real people, selecting the most appealing ones.
-- Validate the best versions using simple advertisements to measure clicks and real interest.
-
-📌 **Key Concepts**
- Situation
-Understand the reality of the world you’re dealing
-with and the people within it, so you can spot
-opportunities for innovation.
- Ideas
-Come up with surprising new ideas for products,
-services or experiences, using exercises that
-stimulate your creativity.
- Focus
-Enable yourself to start with the riskiest aspect of
-an idea. Then, if you need to adapt, you’ll have the
-leeway to take more ‘shots’ and find success.
- Signals
-Identify which type(s) of signals you’d need to see
-to feel confident that your innovation will succeed.
- Probe
-Poke the world for the signals you need. How have
-(or haven’t) real humans changed their behaviour as
-a result of something you put out there?
- Sense
-Generate actionable insights from the signals you
-gathered. Then you can either adapt your plans, or
-move forward with confidence and momentum.
- Support
-Core methods for innovation.
+Key Concepts
+Context
+All brands are understood in relation to the world
+around them. Find the gaps and opportunities you
+could exploit.
+Introspection
+Every business has hidden advantages and
+disadvantages. Discover yours so you know what
+you’re working with.
+Strategy
+Great brands offer something to the world nobody
+else does. Figure out what that thing is for you.
+Judgement
+Insights are great, but you’ve got to make them
+usable and effective. Transform those raw ideas into
+clear strategic direction.
+Execution
+Creative execution is so much more than a logo
+and some ads. Bring your strategy to life across the
+whole of your business.
+Double Down
+Iconic brands keep things fresh by pushing deeper
+and further every year. Explore just how far you can
+take it.

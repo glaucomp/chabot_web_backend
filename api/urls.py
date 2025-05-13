@@ -16,9 +16,13 @@ from .views.brain_view import (
     InsertBrainView,
 )
 
+from .api_views import conversation_view
+
+
 # Define URL patterns
 urlpatterns = [
     # Prompt Conversation
+    path("prompt_conversation/", conversation_view, name="prompt_conversation"),
     path("prompt_conversation_site/",PromptConversationSiteView.as_view(),name="prompt_conversation_site",),
     path("prompt_conversation_admin/",PromptConversationAdminView.as_view(),name="prompt_conversation_admin",),
     path("prompt_conversation_max/",PromptConversationMaxView.as_view(),name="prompt_conversation_max",),

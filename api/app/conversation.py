@@ -216,7 +216,7 @@ def prompt_conversation_site(
                         {"role": "system", "content": f"Casually confirm the user's selected topic '{confirmed_topic}' and ask whether they want to create something new or improve something existing. Be friendly, conversational, and concise."}
                     ],
                     temperature=0.7,
-                    max_tokens=60
+                    max_tokens=150
                 ).choices[0].message.content.strip()
 
                 db.conversations.update_one(
@@ -377,7 +377,6 @@ def prompt_conversation_site(
                         }
 
             
-        # Estado ação confirmada: chamar agente especialista
         elif conversation_state == "action_confirmed":
 
             specialist_agent = get_specialist_agent(
