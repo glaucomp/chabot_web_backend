@@ -41,6 +41,26 @@ FLOW_DEFINITION = {
     "level_4_ok_no_share": {"next": "level_5_other_problems"},
 }
 
+def get_varied_question(original_question):
+    prompt = f"""
+    I'm having a friendly chat with a user. I've already asked this question once, but I don't want to sound repetitive or robotic. 
+    Could you please help me rewrite the following question in a slightly different, conversational, and friendly manner?
+
+    Original question: "{original_question}"
+
+    Provide ONLY the rephrased, friendly question—no quotes, no extra text.
+    """
+
+    response = client.chat.completions.create(
+        model="gpt-3.5-turbo",
+        messages=[{"role": "user", "content": prompt}],
+        max_tokens=50,
+        temperature=0.7
+    )
+
+    varied_question = response.choices[0].message.content.strip()
+    return varied_question if varied_question else original_question
+
 def add_conversation_step(conversation_id, level, node_id, question, response=None):
     conversation, created = ConversationHistory.objects.get_or_create(
         conversation_id=conversation_id,
@@ -72,20 +92,18 @@ def get_next_step(conversation):
     current_node_id = current_step["node_id"]
     user_response = current_step.get("response")
 
+    next_node_data = FLOW_DEFINITION.get(current_node_id, {})
+
     if user_response:
-        next_node_id = FLOW_DEFINITION.get(current_node_id, {}).get(user_response)
+        next_node_id = next_node_data.get(user_response)
         if not next_node_id:
-            next_node_id = FLOW_DEFINITION.get(current_node_id, {}).get("next")
+            next_node_id = next_node_data.get("next")
     else:
-        next_node_id = current_node_id  # Ainda aguardando uma resposta válida.
+        next_node_id = current_node_id
 
-    # fallback seguro
-    if not next_node_id:
-        next_node_id = "level_1_industry"
+    return next_node_id or "level_1_industry"
 
-    return next_node_id
-
-def validate_response_with_ai(question, user_response):
+def validate_response_with_ai_level_1(question, user_response):
     prompt = f"""
     Question: "{question}"
     User's response: "{user_response}"
@@ -103,3 +121,74 @@ def validate_response_with_ai(question, user_response):
 
     answer = response.choices[0].message.content.strip().upper()
     return answer == "YES"
+
+def classify_response_with_ai_level_2(question, user_response, valid_categories):
+    prompt = f"""
+    Categorize the user's response to the following question into one of these categories: {', '.join(valid_categories)}.
+
+    Question: "{question}"
+    User's response: "{user_response}"
+
+    Respond ONLY with one of these categories if it clearly matches.
+    If it does not clearly match any of the categories, respond ONLY with "None".
+    """
+
+    response = client.chat.completions.create(
+        model="gpt-3.5-turbo",
+        messages=[{"role": "user", "content": prompt}],
+        max_tokens=5,
+        temperature=0
+    )
+
+    category = response.choices[0].message.content.strip()
+    return category if category in valid_categories else None
+
+def classify_response_with_ai_level_3(question, user_response):
+    valid_categories = ["YES", "NO"]
+    
+    prompt = f"""
+    Categorize clearly the user's response to the following question into exactly one of these two categories: YES, NO.
+
+    Question: "{question}"
+    User's response: "{user_response}"
+
+    Instructions:
+    - Respond strictly "YES" if the user's response clearly indicates affirmation or agreement.
+    - Respond strictly "NO" if the user's response clearly indicates denial or disagreement.
+    - If the user's response is unclear or does not clearly indicate either YES or NO, respond strictly with "None".
+    """
+
+    response = client.chat.completions.create(
+        model="gpt-3.5-turbo",
+        messages=[{"role": "user", "content": prompt}],
+        max_tokens=5,
+        temperature=0
+    )
+
+    category = response.choices[0].message.content.strip().upper()
+    return category if category in valid_categories else None
+
+def classify_response_with_ai_level_4(question, user_response):
+    valid_categories = ["YES", "NO"]
+    
+    prompt = f"""
+    Categorize the user's response to the following question clearly into one of these two categories: YES, NO.
+
+    Question: "{question}"
+    User's response: "{user_response}"
+
+    Instructions:
+    - If the user clearly indicates a positive, affirmative, or detailed response, answer ONLY "YES".
+    - If the user clearly indicates a negative, denial, or refusal to provide details, answer ONLY "NO".
+    - If the user's response is unclear or doesn't fit clearly, answer ONLY "None".
+    """
+
+    response = client.chat.completions.create(
+        model="gpt-3.5-turbo",
+        messages=[{"role": "user", "content": prompt}],
+        max_tokens=5,
+        temperature=0
+    )
+
+    category = response.choices[0].message.content.strip().upper()
+    return category if category in valid_categories else None
