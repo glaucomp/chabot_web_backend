@@ -11,26 +11,35 @@ from .utils import (
     classify_response_with_ai_level_2,
     classify_response_with_ai_level_3,
     classify_response_with_ai_level_4,
+    classify_response_with_ai_level_4_deal_with,
+    classify_response_with_ai_level_5_you_must_be_top,
+    classify_response_with_ai_level_5_glad_to_hear,
+    classify_response_with_ai_level_6_best_of_luck,
+    execute_final_node_action,
     FLOW_DEFINITION,
 )
-from .models import ConversationHistory
+from .models import ConversationFlow , ConversationHistory
 
 
 QUESTION_TEXT_MAPPING = {
-    "level_1_industry": "What [INDUSTRY] are you in?",
+    "level_1_industry": "What INDUSTRY are you in?",
     "level_2_business_status": "How is business going?",
-    "level_3_good_industry_issue": "I've heard about some common [INDUSTRY ISSUE] in your field. Are you facing any of them?",
+    "level_3_good_industry_issue": "Great happy for you. I have heard in your industry you guys have INDUSTRY ISSUE is that something you have to deal with?",
     "level_3_bad_improve": "Tell me more about what you'd like to improve.",
     "level_3_ok_share": "Is there something interesting happening you'd like to share?",
     "level_4_tell_more_good": "Tell me more about it...",
-    "level_4_good_no_issue": "Got it! Any other problems?",
-    "level_4_tell_more_bad": "Tell me more about it...",
-    "level_4_bad_no_improve": "Understood. Are there any other issues?",
-    "level_4_tell_more_ok": "Tell me more about it...",
-    "level_4_ok_no_share": "Got it. Any other concerns?",
+    "level_4_deal_with": "I have heard in your industry you guys have [INDUSTRY ISSUE] is that something you have to deal with?",
+    "level_5_you_must_be_top":"You must be top of your game. Here’s the thing… as M&J intel, i help all sorts of industries to figure out their problems. Do you want to share anything that has been bothering you?21",
+    "level_5_glad_to_hear":"Im glad to hear that,I’m happy for you. I’m not sure if this is for you, but do you know anyone who would need my help?",
+    "level_6_best_of_luck": "Best of luck in the future. Nice meeting you. If you ever want to pick up this conversation enter your email below.",
+    
+    "level_5_ask_more_problems": "Got it. Would you like to talk about other issues?",
     "level_5_offer_solution_good": "Here's what I can suggest...",
-    "level_5_other_problems": "Are you facing any other issues?"
-    # Continue conforme necessário...
+
+    "@@@EMAIL@@@": "Thank you! I'll follow up via email soon. Could you please confirm your email address?",
+    "@@@REFERRAL@@@": "Fantastic! Could you please share the contact details of the person you'd like to refer?",
+    "@@@SAVE CONVERSATION@@@": "I'll make sure our conversation is saved. If you need anything else, feel free to get back in touch!"
+
 }
 
 @csrf_exempt
@@ -46,7 +55,6 @@ def conversation_view(request):
     except json.JSONDecodeError:
         return JsonResponse({"error": "Invalid JSON provided."}, status=400)
 
-    data = json.loads(request.body)
     conversation_id = data.get("conversation_id")
     user_response = data.get("response")
 
@@ -55,18 +63,29 @@ def conversation_view(request):
         conversation_id = str(uuid.uuid4())
         next_node_id = "level_1_industry"
         original_question = QUESTION_TEXT_MAPPING[next_node_id]
-        next_question = get_varied_question(original_question)
+        next_question = get_varied_question(original_question,conversation_id)
 
-        conversation = ConversationHistory.objects.create(
+        flow = ConversationFlow.objects.create(
             conversation_id=conversation_id,
-            history=[{
+            flow=[{
                 "step": 1,
                 "level": 1,
                 "node_id": next_node_id,
-                "question": next_question,
+                "question": original_question,  # <-- original aqui
                 "response": None,
-                "timestamp": None
+                "validated": False
             }],
+        )
+
+        history = ConversationHistory.objects.create(
+            conversation_id=conversation_id,
+            history=[
+                {
+                    "timestamp": timezone.now().isoformat(),
+                    "sender": "AI",
+                    "message": next_question  # <-- pergunta gerada aqui
+                }
+            ]
         )
 
         return JsonResponse({
@@ -76,15 +95,18 @@ def conversation_view(request):
                 "level": 1,
                 "question": next_question
             },
-            "history": conversation.history
+            "flow": flow.flow,
+            "history": history.history
         })
 
-    # CONTINUAÇÃO DE UMA CONVERSA
-    conversation = ConversationHistory.objects.filter(conversation_id=conversation_id).first()
-    if not conversation:
+    # CONTINUAÇÃO DA CONVERSA
+    flow = ConversationFlow.objects.filter(conversation_id=conversation_id).first()
+    history = ConversationHistory.objects.filter(conversation_id=conversation_id).first()
+
+    if not flow or not history:
         return JsonResponse({"error": "Invalid conversation_id provided."}, status=400)
 
-    current_step = conversation.history[-1]
+    current_step = flow.flow[-1]
     current_question = current_step["question"]
     current_node_id = current_step["node_id"]
     current_level = current_step["level"]
@@ -92,69 +114,93 @@ def conversation_view(request):
     if not user_response:
         return JsonResponse({"error": "Response required for existing conversation."}, status=400)
 
-    # -----------------------------------
-    # ORGANIZAÇÃO PRINCIPAL POR LEVEL
-    # -----------------------------------
+    # Salva imediatamente a resposta no histórico completo
+    history.history.append({
+        "timestamp": timezone.now().isoformat(),
+        "sender": "User",
+        "message": user_response
+    })
+
+    validated_category = None
 
     if current_node_id == "level_1_industry":
-        if not validate_response_with_ai_level_1(current_question, user_response):
-            return _error_response(conversation, current_step, "Your response didn't answer my question clearly.")
-
-        current_step["response"] = user_response
-
+        if validate_response_with_ai_level_1(current_question, user_response):
+            validated_category = user_response
     elif current_node_id == "level_2_business_status":
         valid_categories = list(FLOW_DEFINITION[current_node_id].keys())
-        classified_category = classify_response_with_ai_level_2(current_question, user_response, valid_categories)
-
-        if not classified_category:
-            return _error_response(conversation, current_step, "Couldn't classify your response, please try again.")
-
-        current_step["response"] = classified_category
-        current_step["original_user_response"] = user_response
-
+        validated_category = classify_response_with_ai_level_2(current_question, user_response, valid_categories)
     elif current_node_id in ["level_3_good_industry_issue", "level_3_bad_improve", "level_3_ok_share"]:
-        classified_category = classify_response_with_ai_level_3(current_question, user_response)
-
-        if not classified_category:
-            return _error_response(conversation, current_step, "Please clearly answer YES or NO.")
-
-        current_step["response"] = classified_category
-        current_step["original_user_response"] = user_response
-
+        validated_category = classify_response_with_ai_level_3(current_question, user_response)
     elif current_node_id in ["level_4_tell_more_good", "level_4_tell_more_bad", "level_4_tell_more_ok"]:
-        classified_category = classify_response_with_ai_level_4(current_question, user_response)
-
-        if not classified_category:
-            return _error_response(conversation, current_step, "Please clearly indicate YES or NO.")
-
-        current_step["response"] = classified_category
-        current_step["original_user_response"] = user_response
-
+        validated_category = classify_response_with_ai_level_4(current_question, user_response)
+    elif current_node_id in ["level_4_deal_with"]:    
+        validated_category = classify_response_with_ai_level_4_deal_with(current_question, user_response)
+    elif current_node_id == "level_5_you_must_be_top":
+        validated_category = classify_response_with_ai_level_5_you_must_be_top(current_question, user_response)
+    elif current_node_id == "level_5_glad_to_hear":
+        validated_category = classify_response_with_ai_level_5_glad_to_hear(current_question, user_response)
+    elif current_node_id == "level_6_best_of_luck":
+        validated_category = classify_response_with_ai_level_6_best_of_luck(current_question, user_response)
     else:
-        # Segurança para node_ids inesperados
         return JsonResponse({"error": "Unexpected conversation step."}, status=400)
 
-    # Atualiza timestamp após validação
-    current_step["timestamp"] = timezone.now().isoformat()
-    conversation.updated_at = timezone.now()
-    conversation.save()
+    if not validated_category:
+        error_message = "Your response didn't clearly answer my question."
+        repeat_question = f"Sorry, {error_message} {current_question}"
+        history.history.append({
+            "timestamp": timezone.now().isoformat(),
+            "sender": "AI",
+            "message": repeat_question
+        })
+        history.updated_at = timezone.now()
+        history.save()
+        return JsonResponse({
+            "conversation_id": conversation_id,
+            "next_step": {
+                "node_id": current_node_id,
+                "level": current_level,
+                "question": repeat_question
+            },
+            "flow": flow.flow,
+            "history": history.history,
+            "error": error_message
+        })
 
-    # Calcula próximo passo
-    next_node_id = get_next_step(conversation)
+    # Atualiza o passo atual validado no flow
+    current_step["response"] = validated_category
+    current_step["original_user_response"] = user_response
+    current_step["validated"] = True
+    flow.updated_at = timezone.now()
+
+    next_node_id = get_next_step(flow)
+    # Check if the next node is a final action
+    final_action_result = execute_final_node_action(next_node_id, conversation_id, user_response)
+    if final_action_result:
+        return JsonResponse(final_action_result)
+
     original_question = QUESTION_TEXT_MAPPING.get(next_node_id, "Could you elaborate more?")
-    next_question = get_varied_question(original_question)
+    next_question = get_varied_question(original_question,conversation_id)
     next_level = current_level + 1
 
-    # Salva imediatamente o próximo passo
-    add_conversation_step(
-        conversation_id=conversation_id,
-        level=next_level,
-        node_id=next_node_id,
-        question=next_question,
-        response=None
-    )
+    history.history.append({
+        "timestamp": timezone.now().isoformat(),
+        "sender": "AI",
+        "message": next_question
+    })
 
-    conversation.refresh_from_db()
+    flow.flow.append({
+        "step": len(flow.flow) + 1,
+        "level": next_level,
+        "node_id": next_node_id,
+        "question": original_question,
+        "response": None,
+        "validated": False
+    })
+
+    # Atualiza no banco de dados
+    flow.save()
+    history.updated_at = timezone.now()
+    history.save()
 
     return JsonResponse({
         "conversation_id": conversation_id,
@@ -163,7 +209,8 @@ def conversation_view(request):
             "level": next_level,
             "question": next_question
         },
-        "history": conversation.history
+        "flow": flow.flow,
+        "history": history.history
     })
 
 # -----------------------------------
@@ -177,6 +224,6 @@ def _error_response(conversation, current_step, error_message):
             "level": current_step["level"],
             "question": f"Sorry, {error_message} {current_step['question']}"
         },
-        "history": conversation.history,
+        "flow": conversation.flow,
         "error": error_message
     })
