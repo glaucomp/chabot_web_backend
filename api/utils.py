@@ -12,19 +12,22 @@ client = openai.OpenAI(api_key=OPENAI_API_KEY)
 FLOW_DEFINITION = {
     "level_1_industry": {"next": "level_2_business_status"},
     "level_2_business_status": {
-        "Good": "level_3_good_industry_issue",
-        "Bad": "level_3_bad_improve",
-        "Ok": "level_3_ok_share"
+        "POSITIVE": "level_2_positive",
+        "NEGATIVE": "level_3_negative",
+        "VAGUE": "level_2_vague",
+        "REJECT": "level_2_reject",
     },
-    "level_3_good_industry_issue": {
-        "YES": "level_4_tell_more_good",
-        "NO": "level_5_you_must_be_top" 
+    "level_2_vague": {
+        "NEXT": "level_3_negative",
     },
-    "level_3_bad_improve": {
-        "YES": "level_4_tell_more_good",
-        "NO": "level_4_deal_with"
+    "level_2_reject": {
+        "NEXT": "level_3_negative",
     },
-    "level_3_ok_share": {
+    "level_2_positive": {
+        "YES": "level_3_negative",
+        "NO": "level_2_business_status"
+    },
+    "level_3_negative": {
         "YES": "level_4_tell_more_good",
         "NO": "level_4_deal_with"
     },
@@ -65,16 +68,14 @@ def get_varied_question(original_question, conversation_id):
 
         Original question: "{original_question}"
 
-        Provide ONLY the naturally rephrased question—no quotes, no extra explanations.
+        Provide ONLY the naturally rephrased question—no quotes.
 
         Instructions:
-        - Maintain the friendly and informal tone.
-        - Ensure the rephrased question is clear and easy to understand.
-        - Avoid using the same words or phrases as the original question.
-        - Make it sound like a casual conversation.
-        - Keep the context of the conversation in mind.
-        - Use a friendly and engaging style.
-        - Ensure the rephrased question is relevant to the conversation.
+        - Use Grant Cardone's sales techiques to make the question more engaging and natural.
+        - Ask how the user how they are doing with what they are up to.
+        - After find out how user is doing with they are up to, discover the user's problems and needs.
+        - Before the original phase, be curious and exciting to learn more about user's business.
+       
         """
 
         logger.info(f"[VARIED_QUESTION] Contextual history:\n{history_text}")
@@ -119,7 +120,7 @@ def get_varied_question(original_question, conversation_id):
         model="gpt-3.5-turbo",
         messages=[{"role": "user", "content": prompt}],
         max_tokens=60,
-        temperature=0.7
+        temperature=0.9
     )
 
     varied_question = response.choices[0].message.content.strip()
@@ -171,7 +172,10 @@ def validate_response_with_ai_level_1(question, user_response):
     Question: "{question}"
     User's response: "{user_response}"
 
-    Is the user's response relevant and clearly answers the question?
+    Is the user's response relevant about his industry?
+    Instructions:
+    - If the user's response is relevant to the industry, answer strictly with "YES".
+    - If the user's response is not relevant to the industry, use a friendly way to ask more infomation.
     Answer strictly with "YES" if it answers correctly, or "NO" if it doesn't.
     """
 
@@ -186,16 +190,24 @@ def validate_response_with_ai_level_1(question, user_response):
     logger.info(f"[VALIDATE_RESPONSE] Validate response with AI Level 1: {answer}")
     return answer == "YES"
 
-def classify_response_with_ai_level_2(question, user_response, valid_categories):
+def classify_response_with_ai_level_2_positive(question, user_response):
+    valid_categories = ["YES", "NO"]
+
     prompt = f"""
-    Categorize the user's response to the following question into one of these categories: {', '.join(valid_categories)}.
+        You are categorizing a user's response to the following question:
 
-    Question: "{question}"
-    User's response: "{user_response}"
+        Question:
+        "{question}"
 
-    Respond ONLY with one of these categories if it clearly matches.
-    If it does not clearly match any of the categories, respond ONLY with "None".
-    """
+        User's response:
+        "{user_response}"
+
+        Instructions:
+        - Respond ONLY with "yes" if the user's response clearly and explicitly indicates YES, AFFIRMATIVE, AGREEMENT, or confirms they have the specific issue described in the original question.
+        - For ANY other response, including unclear, vague, different problems, or negative responses, respond ONLY with "no".
+
+        Respond ONLY with the exact word: "YES" or "NO".
+        """
 
     response = client.chat.completions.create(
         model="gpt-3.5-turbo",
@@ -205,7 +217,54 @@ def classify_response_with_ai_level_2(question, user_response, valid_categories)
     )
 
     category = response.choices[0].message.content.strip()
+    return category if category in valid_categories else None
+
+def classify_response_with_ai_level_vague_reject(question, user_response):
+    valid_categories = ["NEXT"]
+    prompt = f"""
+        You are categorizing a user's response to the following question:
+        Question:
+        "{question}"
+        User's response:
+        "{user_response}"
+        Instructions:
+        - Respond ONLY with "next" if the user's response clearly answer the question.
+        """
+    
+    response = client.chat.completions.create(
+        model="gpt-3.5-turbo",
+        messages=[{"role": "user", "content": prompt}],
+        max_tokens=5,
+        temperature=0
+    )
+    category = response.choices[0].message.content.strip()
+    return category if category in valid_categories else None
+
+def classify_response_with_ai_level_2(question, user_response, valid_categories):
+    
+    prompt = f"""
+    Categorize clearly the user's response to the following question into exactly one of these categories: {', '.join(valid_categories)}.".
+
+    Question: "{question}"
+    User's response: "{user_response}"
+
+    Instructions:
+    - Respond strictly "Positive" if the user's response the business is good or without any problems.
+    - Respond strictly "Negative" if the user's response clearly indicates the business has problems.
+    - Respond strictly "Reject" if the user's response clearly indicates rejection or refusal to provide the answer.
+    - Respond strictly "Vague" if the user's response is unclear or does not clearly indicate either Positive or Negative or Vague.
+    """
+
+    response = client.chat.completions.create(
+        model="gpt-3.5-turbo",
+        messages=[{"role": "user", "content": prompt}],
+        max_tokens=5,
+        temperature=0
+    )
+
+    category = response.choices[0].message.content.strip().upper()
     logger.info(f"[CLASSIFY_RESPONSE] Classify response with AI Level 2: {category}")
+
     return category if category in valid_categories else None
 
 def classify_response_with_ai_level_3(question, user_response):

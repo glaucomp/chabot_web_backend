@@ -5,10 +5,11 @@ from django.utils import timezone
 
 from .utils import (
     get_varied_question,
-    add_conversation_step,
     get_next_step,
     validate_response_with_ai_level_1,
     classify_response_with_ai_level_2,
+    classify_response_with_ai_level_2_positive,
+    classify_response_with_ai_level_vague_reject,
     classify_response_with_ai_level_3,
     classify_response_with_ai_level_4,
     classify_response_with_ai_level_4_deal_with,
@@ -23,10 +24,12 @@ from .models import ConversationFlow , ConversationHistory
 
 QUESTION_TEXT_MAPPING = {
     "level_1_industry": "What INDUSTRY are you in?",
-    "level_2_business_status": "How is business going?",
-    "level_3_good_industry_issue": "Great happy for you. I have heard in your industry you guys have INDUSTRY ISSUE is that something you have to deal with?",
-    "level_3_bad_improve": "Tell me more about what you'd like to improve.",
-    "level_3_ok_share": "Is there something interesting happening you'd like to share?",
+    "level_2_business_status": "That's interesting, How is business going?",
+    "level_2_positive": "Great happy for you. I have heard in your industry you guys have INDUSTRY ISSUE is that something you have to deal with?",
+    "level_2_vague": "I’m not sure I fully understand. Could you clarify how things are currently going with your business?",
+    "level_2_reject": "That’s absolutely fine! I’d be happy to assist. How’s your business doing at the moment?",
+    "level_3_negative": "Alright, let’s discuss this together. What specifically would you like to improve, or what’s the main pain point?",
+
     "level_4_tell_more_good": "Tell me more about it...",
     "level_4_deal_with": "I have heard in your industry you guys have [INDUSTRY ISSUE] is that something you have to deal with?",
     "level_5_you_must_be_top":"You must be top of your game. Here’s the thing… as M&J intel, i help all sorts of industries to figure out their problems. Do you want to share anything that has been bothering you?21",
@@ -71,7 +74,7 @@ def conversation_view(request):
                 "step": 1,
                 "level": 1,
                 "node_id": next_node_id,
-                "question": original_question,  # <-- original aqui
+                "question": original_question,
                 "response": None,
                 "validated": False
             }],
@@ -83,7 +86,7 @@ def conversation_view(request):
                 {
                     "timestamp": timezone.now().isoformat(),
                     "sender": "AI",
-                    "message": next_question  # <-- pergunta gerada aqui
+                    "message": next_question
                 }
             ]
         )
@@ -99,7 +102,6 @@ def conversation_view(request):
             "history": history.history
         })
 
-    # CONTINUAÇÃO DA CONVERSA
     flow = ConversationFlow.objects.filter(conversation_id=conversation_id).first()
     history = ConversationHistory.objects.filter(conversation_id=conversation_id).first()
 
@@ -114,7 +116,6 @@ def conversation_view(request):
     if not user_response:
         return JsonResponse({"error": "Response required for existing conversation."}, status=400)
 
-    # Salva imediatamente a resposta no histórico completo
     history.history.append({
         "timestamp": timezone.now().isoformat(),
         "sender": "User",
@@ -129,7 +130,11 @@ def conversation_view(request):
     elif current_node_id == "level_2_business_status":
         valid_categories = list(FLOW_DEFINITION[current_node_id].keys())
         validated_category = classify_response_with_ai_level_2(current_question, user_response, valid_categories)
-    elif current_node_id in ["level_3_good_industry_issue", "level_3_bad_improve", "level_3_ok_share"]:
+    elif current_node_id in ["level_2_positive"]:
+        validated_category = classify_response_with_ai_level_2_positive(current_question, user_response)
+    elif current_node_id in ["level_2_vague", "level_2_reject"]:
+        validated_category = classify_response_with_ai_level_vague_reject(current_question, user_response)
+    elif current_node_id in ["level_3_negative"]:
         validated_category = classify_response_with_ai_level_3(current_question, user_response)
     elif current_node_id in ["level_4_tell_more_good", "level_4_tell_more_bad", "level_4_tell_more_ok"]:
         validated_category = classify_response_with_ai_level_4(current_question, user_response)
@@ -166,7 +171,6 @@ def conversation_view(request):
             "error": error_message
         })
 
-    # Atualiza o passo atual validado no flow
     current_step["response"] = validated_category
     current_step["original_user_response"] = user_response
     current_step["validated"] = True
@@ -193,6 +197,7 @@ def conversation_view(request):
         "level": next_level,
         "node_id": next_node_id,
         "question": original_question,
+        "original_user_response": None,
         "response": None,
         "validated": False
     })
