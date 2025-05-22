@@ -1,6 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from django.http import HttpResponse
 
 import logging
 import time
@@ -16,7 +17,8 @@ from api.app.conversation import (
     prompt_conversation_admin,
     prompt_conversation_agent_ai,
     prompt_conversation_grok_admin,
-    prompt_conversation_image
+    prompt_conversation_image,
+    
  )
 
 from api.app.max_conversation import (
@@ -33,11 +35,20 @@ from ai_config.ai_constants import (
     LANGUAGE_DEFAULT,
 )
 
+
+from api.utils import (
+  handle_html
+)
 from api.app.mongo import MongoDB
 
 logger = logging.getLogger(__name__)
 
-
+class RenderGeneratedHTMLView(APIView):
+    def get(self, request, conversation_id):
+        user_response = request.GET.get("last_response", "")  # se quiser passar via GET
+        html_content = handle_html(conversation_id, user_response)
+        return HttpResponse(html_content, content_type="text/html")
+    
 class PromptConversationMaxView(APIView):
     def post(self, request):
         logger.info("Starting prompt_conversation_site request")

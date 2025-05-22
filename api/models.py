@@ -25,3 +25,4 @@ class ConversationHistory(models.Model):
 
     class Meta:
         verbose_name_plural = "Conversation Histories"
+

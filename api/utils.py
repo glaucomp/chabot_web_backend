@@ -4,6 +4,7 @@ import openai
 from api.services.chatbot import OPENAI_API_KEY
 import logging
 import random
+from django.http import JsonResponse
 
 logger = logging.getLogger(__name__)
 
@@ -25,33 +26,43 @@ FLOW_DEFINITION = {
     },
     "level_2_positive": {
         "YES": "level_3_negative",
-        "NO": "level_2_business_status"
     },
     "level_3_negative": {
-        "YES": "level_4_tell_more_good",
-        "NO": "level_4_deal_with"
+        "POSITIVE": "level_4_deep_dive",
+        "VAGUE": "level_3_tell_more",
+        "REJECT": "level_3_encourage_deal"
     },
-    "level_4_tell_more_good": {
-        "YES": "level_5_ask_more_problems",
-        "NO": "level_5_glad_to_hear"
+    "level_3_tell_more": {
+        "NEXT": "level_4_deep_dive",
     },
-    "level_4_deal_with": {
-        "YES": "level_4_tell_more_good",
+    "level_3_encourage_deal": {
+        "NEXT": "level_4_deep_dive",
     },
-    "level_5_you_must_be_top": { 
-        "YES": "level_4_tell_more_good",
-        "NO": "level_5_glad_to_hear",
+    "level_4_deep_dive": {
+        "YES": "level_5_tried_solution",
+        "NO": "level_4_guide_reflection",
     },
-    "level_5_glad_to_hear": {
-        "YES": "@@@REFERRAL@@@",
-        "NO": "level_6_best_of_luck", 
+    "level_4_guide_reflection": {
+        "NEXT": "level_5_tried_solution",
     },
-    "level_5_ask_more_problems": {"YES": "@@@EMAIL@@@"},
-    "level_6_best_of_luck": {"YES": "@@@SAVE CONVERSATION@@@"},
+    "level_5_tried_solution": { 
+        "YES": "level_6_confirm_understanding",
+        "NO": "level_6_confirm_understanding",
+    },
+    "level_5_encourage_optimism": {
+        "NEXT": "level_6_confirm_understanding",
+    },
+    "level_6_confirm_understanding": {
+        "NEXT": "level_7_solution",
+    },
+    "level_7_solution": {"END": True},
 }
+
 
 def get_varied_question(original_question, conversation_id):
     history = ConversationHistory.objects.filter(conversation_id=conversation_id).first()
+
+    history_text = ""
 
     if history and history.history:
         history_text = "\n".join(
@@ -60,27 +71,28 @@ def get_varied_question(original_question, conversation_id):
         )
 
         prompt = f"""
-        I'm chatting informally with a user. Here's our recent interaction:
-
+        Here’s the recent conversation:
         {history_text}
 
-        To avoid sounding repetitive, could you please naturally and informally rephrase this next question?
+        You want to ask this question:
+        "{original_question}"
 
-        Original question: "{original_question}"
+        Rewrite this question in a casual, friendly, and natural tone — like you're chatting with someone over coffee or on WhatsApp.
 
-        Provide ONLY the naturally rephrased question—no quotes.
+        Guidelines:
+        - Keep it short, simple, and human.
+        - Use everyday, non-formal language.
+        - Be warm and curious.
+        - If relevant, add relatable examples like tech, healthcare, retail, education, finance, or real estate.
 
-        Instructions:
-        - Use Grant Cardone's sales techiques to make the question more engaging and natural.
-        - Ask how the user how they are doing with what they are up to.
-        - After find out how user is doing with they are up to, discover the user's problems and needs.
-        - Before the original phase, be curious and exciting to learn more about user's business.
-       
+        Return ONLY the rephrased question. No quotes, no extra text.
         """
 
-        logger.info(f"[VARIED_QUESTION] Contextual history:\n{history_text}")
+
+        logger.info(f"[VARIED_QUESTION - Repetition] Prompt enviado:\n{prompt}")
 
     else:
+
         casual_greetings = [
             "Hey there! Great to connect.",
             "Hi! Happy we can chat.",
@@ -108,19 +120,21 @@ def get_varied_question(original_question, conversation_id):
 
         Original question: "{original_question}"
 
-        Provide ONLY your fully friendly rephrased sentence—no quotes, no extra text.
+        Provide ONLY your fully friendly rephrased sentence, no quotes, no extra text.
+        Instructions:
+        - Use a friendly and casual tone.
+        - Avoid formal or technical language.
+        - Make the question engaging and less robotic.
+        - Show curiosity and enthusiasm about the user's business.
         """
 
-        logger.info(f"[VARIED_QUESTION] New conversation, generated greeting:\n{greeting} {intro}")
-
-
-    logger.info(f"[VARIED_QUESTION] Prompt enviado para OpenAI:\n{prompt}")
+        logger.info(f"[VARIED_QUESTION - Initial] Prompt enviado:\n{prompt}")
 
     response = client.chat.completions.create(
-        model="gpt-3.5-turbo",
+        model="gpt-4o-mini",
         messages=[{"role": "user", "content": prompt}],
-        max_tokens=60,
-        temperature=0.9
+        max_tokens=180,
+        temperature=0.8
     )
 
     varied_question = response.choices[0].message.content.strip()
@@ -157,6 +171,11 @@ def get_next_step(conversation):
     user_response = current_step.get("response")
    
     next_node_data = FLOW_DEFINITION.get(current_node_id, {})
+    
+    if next_node_data.get("END"):
+        final_action_result = execute_final_node_action(next_node_id, conversation.conversation_id, user_response)
+        if final_action_result:
+            return JsonResponse(final_action_result)
 
     if user_response:
         next_node_id = next_node_data.get(user_response)
@@ -182,7 +201,7 @@ def validate_response_with_ai_level_1(question, user_response):
     response = client.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[{"role": "user", "content": prompt}],
-        max_tokens=3,
+        max_tokens=30,
         temperature=0
     )
 
@@ -191,35 +210,36 @@ def validate_response_with_ai_level_1(question, user_response):
     return answer == "YES"
 
 def classify_response_with_ai_level_2_positive(question, user_response):
-    valid_categories = ["YES", "NO"]
+    valid_categories = ["YES"]
 
     prompt = f"""
-        You are categorizing a user's response to the following question:
+    You are categorizing a user's response about a specific issue mentioned in the original question.
+    Original Question:
+    "{question}"
 
-        Question:
-        "{question}"
+    User's Response:
+    "{user_response}"
 
-        User's response:
-        "{user_response}"
+    Instructions:
+    - Respond strictly "YES" only if the user's response explicitly confirms or clearly indicates the issue.
+    - Respond strictly "YES" only if the user's User's Response match with Original Question.
 
-        Instructions:
-        - Respond ONLY with "yes" if the user's response clearly and explicitly indicates YES, AFFIRMATIVE, AGREEMENT, or confirms they have the specific issue described in the original question.
-        - For ANY other response, including unclear, vague, different problems, or negative responses, respond ONLY with "no".
+    Answer strictly and only with one word: "YES" if the user's response anything about them busines.
 
-        Respond ONLY with the exact word: "YES" or "NO".
-        """
+    """
 
     response = client.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[{"role": "user", "content": prompt}],
-        max_tokens=5,
+        max_tokens=30,
         temperature=0
     )
 
-    category = response.choices[0].message.content.strip()
+    category = response.choices[0].message.content.strip().upper()
     return category if category in valid_categories else None
 
-def classify_response_with_ai_level_vague_reject(question, user_response):
+
+def classify_response_with_ai_level_2_vague_reject(question, user_response):
     valid_categories = ["NEXT"]
     prompt = f"""
         You are categorizing a user's response to the following question:
@@ -228,13 +248,13 @@ def classify_response_with_ai_level_vague_reject(question, user_response):
         User's response:
         "{user_response}"
         Instructions:
-        - Respond ONLY with "next" if the user's response clearly answer the question.
+        - Respond ONLY with "NEXT" if the user's response clearly answer the question.
         """
     
     response = client.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[{"role": "user", "content": prompt}],
-        max_tokens=5,
+        max_tokens=50,
         temperature=0
     )
     category = response.choices[0].message.content.strip()
@@ -258,7 +278,7 @@ def classify_response_with_ai_level_2(question, user_response, valid_categories)
     response = client.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[{"role": "user", "content": prompt}],
-        max_tokens=5,
+        max_tokens=50,
         temperature=0
     )
 
@@ -268,38 +288,103 @@ def classify_response_with_ai_level_2(question, user_response, valid_categories)
     return category if category in valid_categories else None
 
 def classify_response_with_ai_level_3(question, user_response):
-    valid_categories = ["YES", "NO"]
-    
+    valid_categories = ["POSITIVE", "VAGUE", "REJECT"]
+
     prompt = f"""
-    Categorize clearly the user's response to the following question into exactly one of these two categories: YES, NO.
+    Categorize the user's response to the following question into exactly one of these categories: {', '.join(valid_categories)}.
 
     Question: "{question}"
     User's response: "{user_response}"
 
     Instructions:
-    - Respond strictly "YES" if the user's response clearly indicates affirmation or agreement.
-    - Respond strictly "NO" if the user's response clearly indicates denial or disagreement.
-    - If the user's response is unclear or does not clearly indicate either YES or NO, respond strictly with "None".
+    - Respond strictly "POSITIVE" if the user's response clearly and directly answers the question.
+    - Respond strictly "VAGUE" if the user's response is unclear, ambiguous, or does not directly answer the question.
+    - Respond strictly "REJECT" if the user's response explicitly indicates rejection or refusal to answer.
     """
 
     response = client.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[{"role": "user", "content": prompt}],
-        max_tokens=5,
+        max_tokens=50,
         temperature=0
     )
 
     category = response.choices[0].message.content.strip().upper()
     return category if category in valid_categories else None
 
-def classify_response_with_ai_level_4(question, user_response):
+def classify_response_with_ai_level_3_tell_more(question, user_response):
+    valid_categories = ["NEXT"]
+    
+    prompt = f"""
+        Categorize the user's response to the following question clearly into one of these categories: NEXT or NONE.
+
+        Question: "{question}"
+        User's response: "{user_response}"
+
+        Instructions:
+        - Respond strictly "NEXT" if the user's response clearly provides specific details or elaborates further about the issue or problem mentioned.
+    """
+
+    response = client.chat.completions.create(
+        model="gpt-3.5-turbo",
+        messages=[{"role": "user", "content": prompt}],
+        max_tokens=50,
+        temperature=0
+    )
+
+    category = response.choices[0].message.content.strip().upper()
+    return category if category in valid_categories else None
+
+def classify_response_with_ai_level_3_encourage_deal(question, user_response):
+    valid_categories = ["NEXT"]
+
+    prompt = f"""
+        Categorize the user's response clearly into one of these two categories: NEXT or NONE.
+
+        Question: "{question}"
+        User's response: "{user_response}"
+
+        Instructions:
+        - Respond strictly "NEXT" if the user's response clearly provides specific details, explanations, or elaborates further about their company's issue or problem.
+    """
+
+    response = client.chat.completions.create(
+        model="gpt-3.5-turbo",
+        messages=[{"role": "user", "content": prompt}],
+        max_tokens=50,
+        temperature=0
+    )
+
+    category = response.choices[0].message.content.strip().upper()
+    return category if category in valid_categories else None
+
+def classify_response_with_ai_level_4(question, user_response, conversation_id):
+    
+    history = ConversationHistory.objects.filter(conversation_id=conversation_id).first()
+
+    history_text = ""
+
+    if history and history.history:
+        history_text = "\n".join(
+            f'{step["sender"]}: {step["message"]}'
+            for step in history.history[-6:]
+        )
+
     valid_categories = ["YES", "NO"]
     
     prompt = f"""
-    Categorize the user's response to the following question clearly into one of these two categories: YES, NO.
+    In that point you have to get more details, to undestand more the users problem, and give a clear answer to the user.
+    Categorize the user's response to the following question clearly into one of these two categories: YES or NO.
+    If the user clearly indicates a deep drive, in the conversation, answer ONLY "YES".
+    If the user clearly indicates a negative, denial, or refusal to provide details, answer ONLY "NO".
+    If the user's response is unclear or doesn't fit clearly, answer ONLY "None".
+   
 
     Question: "{question}"
     User's response: "{user_response}"
+
+    Context of the conversation:
+    {history_text}
 
     Instructions:
     - If the user clearly indicates a positive, affirmative, or detailed response, answer ONLY "YES".
@@ -310,47 +395,52 @@ def classify_response_with_ai_level_4(question, user_response):
     response = client.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[{"role": "user", "content": prompt}],
-        max_tokens=5,
+        max_tokens=50,
         temperature=0
     )
 
     category = response.choices[0].message.content.strip().upper()
     return category if category in valid_categories else None
 
-def classify_response_with_ai_level_4_deal_with(question, user_response):
+def classify_response_with_ai_level_4_guide_reflection(question, user_response):
+    valid_categories = ["NEXT"]
     prompt = f"""
+    Categorize the user's response to the following question clearly into one of these two categories: NEXT or NONE.
     Question: "{question}"
     User's response: "{user_response}"
-
     Instructions:
-    - Respond strictly with "YES" if the user's response explicitly confirms or positively answers the question.
-    - If the user's response is negative, unclear, irrelevant, uncertain, or does not explicitly confirm, respond strictly with "None".
-    """
+    - Respond strictly "NEXT" if the user's response clearly provides specific details or elaborates further about the issue or problem mentioned.
 
+    - Respond strictly "NONE" if the user's response does not provide any specific details or elaboration.
+
+    """
     response = client.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[{"role": "user", "content": prompt}],
-        max_tokens=5,
+        max_tokens=50,
         temperature=0
     )
-
     category = response.choices[0].message.content.strip().upper()
-    return category if category == "YES" else None
+    return category if category in valid_categories else None
 
-def classify_response_with_ai_level_5_you_must_be_top(question, user_response):
+def classify_response_with_ai_level_5_tried_solution(question, user_response):
     valid_categories = ["YES", "NO"]
     
     prompt = f"""
-    Categorize the user's response to the following question clearly into one of these two categories: YES, NO.
+        Categorize the user's response clearly into one of these two categories: YES or NO.
 
-    Question: "{question}"
-    User's response: "{user_response}"
+        Question asked to user:
+        "{question}"
 
-    Instructions:
-    - If the user clearly indicates a positive, affirmative, or detailed response, answer ONLY "YES".
-    - If the user clearly indicates a negative, denial, or refusal to provide details, answer ONLY "NO".
-    - If the user's response is unclear or doesn't fit clearly, answer ONLY "None".
-    """
+        User's response:
+        "{user_response}"
+
+        Instructions:
+        - Answer strictly "YES" if the user's response clearly answers your question directly, whether affirmatively or negatively (e.g., "Yes, I've tried" or "No, I haven't tried yet" are both clear answers).
+        - Answer strictly "NO" if the user's response does NOT clearly answer your question, is ambiguous, unclear, irrelevant, or does not directly address the question.
+
+        Respond ONLY with "YES" or "NO".
+        """
 
     response = client.chat.completions.create(
         model="gpt-3.5-turbo",
@@ -362,80 +452,181 @@ def classify_response_with_ai_level_5_you_must_be_top(question, user_response):
     category = response.choices[0].message.content.strip().upper()
     return category if category in valid_categories else None
 
-def classify_response_with_ai_level_5_glad_to_hear(question, user_response):
-    valid_categories = ["YES", "NO"]
+def classify_response_with_ai_level_5_encourage_optimism(question, user_response):
+    valid_categories = ["NEXT"]
     
     prompt = f"""
-    Categorize the user's response to the following question clearly into one of these two categories: YES, NO.
+    Categorize the user's response to the following question clearly into one of these two categories: NEXT, NONE.
 
     Question: "{question}"
     User's response: "{user_response}"
 
     Instructions:
-    - If the user clearly indicates a positive, affirmative, or detailed response, answer ONLY "YES".
-    - If the user clearly indicates a negative, denial, or refusal to provide details, answer ONLY "NO".
-    - If the user's response is unclear or doesn't fit clearly, answer ONLY "None".
+    - Respond strictly "NEXT" if the user's response clearly provides specific details or elaborates further about the issue or problem mentioned.
+    - Respond strictly "NONE" if the user's response does not provide any specific details or elaboration.
     """
 
     response = client.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[{"role": "user", "content": prompt}],
-        max_tokens=5,
+        max_tokens=50,
         temperature=0
     )
 
     category = response.choices[0].message.content.strip().upper()
     return category if category in valid_categories else None
 
-def classify_response_with_ai_level_6_best_of_luck(question, user_response):
+def classify_response_with_ai_level_6_confirm_understanding(question, user_response, conversation_id):
+    valid_categories = ["NEXT"]
+
+    history = ConversationHistory.objects.filter(conversation_id=conversation_id).first()
+
+    if history and history.history:
+            history_text = "\n".join(
+                f'{step["sender"]}: {step["message"]}'
+                for step in history.history[-6:]
+            )
+
     prompt = f"""
-    Determine if the user's response to the following question contains a valid email address.
+    You're a friendly assistant having a supportive conversation with a user. Your goal right now is:
 
-    Question: "{question}"
-    User's response: "{user_response}"
+    1. Carefully read the recent conversation provided below.
+    2. Clearly summarize in a friendly, conversational, and supportive way the main points that the user has shared about their situation.
+    3. Confirm explicitly with the user if your understanding is correct, asking politely if there's anything you missed or misunderstood.
 
-    Instructions:
-    - If the user's response clearly includes a valid email address, respond strictly with "YES".
-    - If the response clearly does NOT contain a valid email address, respond strictly with "NO".
-    - If the user's response is unclear, respond strictly with "None".
+    Conversation history:
+    {history_text}
+
+    Question asked to the user:
+    "{question}"
+
+    User's response to the question:
+    "{user_response}"
+
+    Instructions for your response:
+    - Write a short, conversational, empathetic summary clearly showing you understand the user's current issues.
+    - Explicitly ask the user to confirm if you understood everything correctly.
+    - Invite them to clarify or add details if necessary, making it easy and comfortable for them to correct any misunderstanding.
+
+    Respond ONLY with "NEXT" or "NONE".
     """
 
     response = client.chat.completions.create(
-        model="gpt-3.5-turbo",
+        model="gpt-4o",
         messages=[{"role": "user", "content": prompt}],
-        max_tokens=5,
-        temperature=0
+        max_tokens=150,
+        temperature=0.2
     )
 
     category = response.choices[0].message.content.strip().upper()
-    return "YES" if category == "YES" else None
+    return category if category in valid_categories else None
 
-def execute_final_node_action(node_id, conversation_id, user_response):
-    if node_id == "@@@REFERRAL@@@":
-        return handle_referral(conversation_id, user_response)
-    elif node_id == "@@@EMAIL@@@":
-        return handle_email(conversation_id, user_response)
-    elif node_id == "@@@SAVE CONVERSATION@@@":
-        return save_conversation(conversation_id)
-    else:
-        return None
+def classify_response_with_ai_level_7_solution(question, user_response, conversation_id):
+    history = ConversationHistory.objects.filter(conversation_id=conversation_id).first()
 
-def handle_referral(conversation_id, user_response):
-    return {
-        "status": "referral_handled",
-        "conversation_id": conversation_id,
-        "details": user_response
-    }
+    history_text = ""
+    if history and history.history:
+        history_text = "\n".join(
+            f'{step["sender"]}: {step["message"]}'
+            for step in history.history[-6:]
+        )
 
-def handle_email(conversation_id, user_response):
-    return {
-        "status": "email_handled",
-        "conversation_id": conversation_id,
-        "email": user_response
-    }
+    prompt = f"""
+    You're a senior technology and business consultant providing high-tech solutions.
 
-def save_conversation(conversation_id):
-    return {
-        "status": "conversation_saved",
-        "conversation_id": conversation_id,
-    }
+    Recent conversation context:
+    {history_text}
+
+    User's latest detailed input about their issue:
+    "{user_response}"
+
+    Instructions:
+    Provide a highly professional, practical, and high-tech solution strictly based on the user's latest input and previous conversation context. 
+    Your solution must:
+    - Be clear, actionable, and directly relevant to the user's described situation.
+    - Reflect current industry best practices and cutting-edge technologies.
+    - Maintain a confident, supportive, and professional tone.
+
+    Structured High-Tech Solution:
+    """
+
+    response = client.chat.completions.create(
+        model="gpt-4o",
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0.5,
+        max_tokens=500
+    )
+
+    solution = response.choices[0].message.content.strip()
+    return solution
+
+
+def execute_final_node_action( conversation_id, user_response):
+   return handle_html(conversation_id, user_response)
+    
+def handle_html(conversation_id, user_response):
+    from .models import ConversationFlow, ConversationHistory
+
+    # Load history
+    history = ConversationHistory.objects.filter(conversation_id=conversation_id).first()
+    history_text = ""
+    if history and history.history:
+        history_text = "\n".join(
+            f'{step["sender"]} ({step["timestamp"]}): {step["message"]}'
+            for step in history.history[-10:]
+        )
+
+    # Load flow
+    flow = ConversationFlow.objects.filter(conversation_id=conversation_id).first()
+    flow_text = ""
+    if flow and flow.flow:
+        flow_text = "\n".join(
+            f'Step {step["step"]} (Level {step["level"]}) - Q: {step["question"]} | A: {step.get("response", "Awaiting response")}'
+            for step in flow.flow
+        )
+
+    prompt = f"""
+        You are a senior frontend engineer and business consultant.
+
+        Your task is to generate a complete and professional standalone HTML document that displays a detailed overview of a conversation and its AI-generated solution.
+
+        Context:
+        - Conversation history:
+        {history_text}
+
+        - Conversation flow:
+        {flow_text}
+
+
+        Instructions:
+        - Create a fully structured HTML5 document with <html>, <head>, <body>, etc.
+        - Use clean, professional design with internal CSS (no frameworks).
+        - Use modern fonts, soft shadows, good padding, and warm color palette.
+        - Include the following sections in order:
+
+        1. Header: "Report"
+        2. Chat History: show messages in bubble-style layout with sender + timestamp.
+        3. Conversation Flow: question + response per step.
+        4. Next Step: show next planned question (if any).
+        5. Solution Summary: formatted report, bullet points, yellow box.
+
+        Rules:
+        - Do not include explanations, comments, or Markdown formatting.
+        - The output must be a clean, self-contained HTML page ready for display.
+
+        Return ONLY the final HTML.
+        """
+
+    response = client.chat.completions.create(
+        model="gpt-4",
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0.4,
+        max_tokens=1200
+    )
+
+    html = response.choices[0].message.content.strip()
+
+    if not (html.startswith("<!DOCTYPE html>") or html.startswith("<html>")):
+        html = f"<!DOCTYPE html>\n<html>\n{html}\n</html>"
+
+    return html

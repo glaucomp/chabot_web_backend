@@ -2,6 +2,7 @@ import json, uuid
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
+import random
 
 from .utils import (
     get_varied_question,
@@ -9,13 +10,15 @@ from .utils import (
     validate_response_with_ai_level_1,
     classify_response_with_ai_level_2,
     classify_response_with_ai_level_2_positive,
-    classify_response_with_ai_level_vague_reject,
+    classify_response_with_ai_level_2_vague_reject,
     classify_response_with_ai_level_3,
+    classify_response_with_ai_level_3_tell_more,
+    classify_response_with_ai_level_3_encourage_deal,
     classify_response_with_ai_level_4,
-    classify_response_with_ai_level_4_deal_with,
-    classify_response_with_ai_level_5_you_must_be_top,
-    classify_response_with_ai_level_5_glad_to_hear,
-    classify_response_with_ai_level_6_best_of_luck,
+    classify_response_with_ai_level_5_tried_solution,
+    classify_response_with_ai_level_5_encourage_optimism,
+    classify_response_with_ai_level_6_confirm_understanding,
+    classify_response_with_ai_level_7_solution,
     execute_final_node_action,
     FLOW_DEFINITION,
 )
@@ -30,18 +33,16 @@ QUESTION_TEXT_MAPPING = {
     "level_2_reject": "That’s absolutely fine! I’d be happy to assist. How’s your business doing at the moment?",
     "level_3_negative": "Alright, let’s discuss this together. What specifically would you like to improve, or what’s the main pain point?",
 
-    "level_4_tell_more_good": "Tell me more about it...",
-    "level_4_deal_with": "I have heard in your industry you guys have [INDUSTRY ISSUE] is that something you have to deal with?",
-    "level_5_you_must_be_top":"You must be top of your game. Here’s the thing… as M&J intel, i help all sorts of industries to figure out their problems. Do you want to share anything that has been bothering you?21",
-    "level_5_glad_to_hear":"Im glad to hear that,I’m happy for you. I’m not sure if this is for you, but do you know anyone who would need my help?",
-    "level_6_best_of_luck": "Best of luck in the future. Nice meeting you. If you ever want to pick up this conversation enter your email below.",
+    "level_3_tell_more": "Tell me more about it...",
+    "level_3_encourage_deal": "I have heard in your industry you guys have [INDUSTRY ISSUE] is that something you have to deal with?",
+    "level_4_deep_dive": "I see.Ah, got it dealing with [INDUSTRY ISSUE] sounds challenging. Could you tell me a bit more about what is going on exactly? For example, which areas have you noticed being impacted the most?",
+    "level_4_guide_reflection": "Uncertain about the next steps? I can help you with that. What are your thoughts on this?",
+    "level_5_tried_solution":" I understand. Have you tried any solutions to address this issue? If so, what were they?",
+    "level_5_encourage_optimism":"Come on, let’s get optimistic! What’s your outlook on this situation?",
+    "level_6_confirm_understanding": "I think I got it. So, to summarize, you’re facing [INDUSTRY ISSUE] and you’ve tried [SOLUTION]. Is that correct?",
     
-    "level_5_ask_more_problems": "Got it. Would you like to talk about other issues?",
-    "level_5_offer_solution_good": "Here's what I can suggest...",
+    "level_7_solution": "Can M&J intelligence help you with that? We have a solution that can help you with [INDUSTRY ISSUE]. Would you like to know more about it?",
 
-    "@@@EMAIL@@@": "Thank you! I'll follow up via email soon. Could you please confirm your email address?",
-    "@@@REFERRAL@@@": "Fantastic! Could you please share the contact details of the person you'd like to refer?",
-    "@@@SAVE CONVERSATION@@@": "I'll make sure our conversation is saved. If you need anything else, feel free to get back in touch!"
 
 }
 
@@ -133,25 +134,83 @@ def conversation_view(request):
     elif current_node_id in ["level_2_positive"]:
         validated_category = classify_response_with_ai_level_2_positive(current_question, user_response)
     elif current_node_id in ["level_2_vague", "level_2_reject"]:
-        validated_category = classify_response_with_ai_level_vague_reject(current_question, user_response)
+        validated_category = classify_response_with_ai_level_2_vague_reject(current_question, user_response)
     elif current_node_id in ["level_3_negative"]:
         validated_category = classify_response_with_ai_level_3(current_question, user_response)
-    elif current_node_id in ["level_4_tell_more_good", "level_4_tell_more_bad", "level_4_tell_more_ok"]:
-        validated_category = classify_response_with_ai_level_4(current_question, user_response)
-    elif current_node_id in ["level_4_deal_with"]:    
-        validated_category = classify_response_with_ai_level_4_deal_with(current_question, user_response)
-    elif current_node_id == "level_5_you_must_be_top":
-        validated_category = classify_response_with_ai_level_5_you_must_be_top(current_question, user_response)
-    elif current_node_id == "level_5_glad_to_hear":
-        validated_category = classify_response_with_ai_level_5_glad_to_hear(current_question, user_response)
-    elif current_node_id == "level_6_best_of_luck":
-        validated_category = classify_response_with_ai_level_6_best_of_luck(current_question, user_response)
+    elif current_node_id in ["level_3_tell_more"]:
+        validated_category = classify_response_with_ai_level_3_tell_more(current_question, user_response)
+    elif current_node_id in ["level_3_encourage_deal"]:    
+        validated_category = classify_response_with_ai_level_3_encourage_deal(current_question, user_response)
+    elif current_node_id in ["level_4_deep_dive"]:
+        validated_category = classify_response_with_ai_level_4(current_question, user_response, conversation_id)
+    elif current_node_id == "level_5_tried_solution":
+        validated_category = classify_response_with_ai_level_5_tried_solution(current_question, user_response)
+    elif current_node_id == "level_5_encourage_optimism":
+        validated_category = classify_response_with_ai_level_5_encourage_optimism(current_question, user_response)
+    elif current_node_id == "level_6_confirm_understanding":
+        validated_category = classify_response_with_ai_level_6_confirm_understanding(current_question, user_response, conversation_id)
+    elif current_node_id == "level_7_solution":
+        validated_category = classify_response_with_ai_level_7_solution(current_question, user_response, conversation_id)
+    
+        flow.flow.append({
+            "step": len(flow.flow),
+            "level": current_level,
+            "node_id": current_node_id,
+            "question": current_question,
+            "original_user_response": user_response,
+            "response": "SOLUTION_PROVIDED",
+            "validated": True,
+            "timestamp": timezone.now().isoformat()
+        })
+        flow.updated_at = timezone.now()
+        flow.save()
+
+        history.history.append({
+            "timestamp": timezone.now().isoformat(),
+            "sender": "User",
+            "message": user_response
+        })
+        history.history.append({
+            "timestamp": timezone.now().isoformat(),
+            "sender": "AI",
+            "message": validated_category
+        })
+        history.updated_at = timezone.now()
+        history.save()
+        
+        return JsonResponse({
+            "solution": validated_category,
+            "conversation_id": conversation_id,
+            "flow": flow.flow,
+            "history": history.history,
+        })
+    
+    
     else:
         return JsonResponse({"error": "Unexpected conversation step."}, status=400)
 
     if not validated_category:
+
+
+        unclear_phrases = [
+            "Oh, I didn't quite catch that.",
+            "I’m not sure I understand.",
+            "Could you clarify that for me?",
+            "I’m not sure I follow you.",
+            "I’m not quite sure what you mean.",
+            "I’m not sure I understand your point.",
+            "I’m not sure I get your point.",
+            "I’m not sure I understand what you’re saying.",
+            "I’m not sure I understand your response.",
+            "I’m not quite sure what you mean by that.",
+          
+        ]
+        unclear_phrases = random.choice(unclear_phrases)
+
         error_message = "Your response didn't clearly answer my question."
-        repeat_question = f"Sorry, {error_message} {current_question}"
+        repeat_question = get_varied_question(unclear_phrases+", "+current_question, conversation_id)
+        # repeat_question = f"Sorry, {error_message} {repeat_question}"
+        
         history.history.append({
             "timestamp": timezone.now().isoformat(),
             "sender": "AI",
@@ -177,10 +236,6 @@ def conversation_view(request):
     flow.updated_at = timezone.now()
 
     next_node_id = get_next_step(flow)
-    # Check if the next node is a final action
-    final_action_result = execute_final_node_action(next_node_id, conversation_id, user_response)
-    if final_action_result:
-        return JsonResponse(final_action_result)
 
     original_question = QUESTION_TEXT_MAPPING.get(next_node_id, "Could you elaborate more?")
     next_question = get_varied_question(original_question,conversation_id)
@@ -202,7 +257,7 @@ def conversation_view(request):
         "validated": False
     })
 
-    # Atualiza no banco de dados
+    
     flow.save()
     history.updated_at = timezone.now()
     history.save()
