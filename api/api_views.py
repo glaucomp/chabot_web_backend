@@ -26,24 +26,20 @@ from .models import ConversationFlow , ConversationHistory
 
 
 QUESTION_TEXT_MAPPING = {
-    "level_1_industry": "What INDUSTRY are you in?",
-    "level_2_business_status": "That's interesting, How is business going?",
-    "level_2_positive": "Great happy for you. I have heard in your industry you guys have INDUSTRY ISSUE is that something you have to deal with?",
-    "level_2_vague": "I’m not sure I fully understand. Could you clarify how things are currently going with your business?",
-    "level_2_reject": "That’s absolutely fine! I’d be happy to assist. How’s your business doing at the moment?",
-    "level_3_negative": "Alright, let’s discuss this together. What specifically would you like to improve, or what’s the main pain point?",
-
-    "level_3_tell_more": "Tell me more about it...",
-    "level_3_encourage_deal": "I have heard in your industry you guys have [INDUSTRY ISSUE] is that something you have to deal with?",
-    "level_4_deep_dive": "I see.Ah, got it dealing with [INDUSTRY ISSUE] sounds challenging. Could you tell me a bit more about what is going on exactly? For example, which areas have you noticed being impacted the most?",
-    "level_4_guide_reflection": "Uncertain about the next steps? I can help you with that. What are your thoughts on this?",
-    "level_5_tried_solution":" I understand. Have you tried any solutions to address this issue? If so, what were they?",
-    "level_5_encourage_optimism":"Come on, let’s get optimistic! What’s your outlook on this situation?",
-    "level_6_confirm_understanding": "I think I got it. So, to summarize, you’re facing [INDUSTRY ISSUE] and you’ve tried [SOLUTION]. Is that correct?",
-    
-    "level_7_solution": "Can M&J intelligence help you with that? We have a solution that can help you with [INDUSTRY ISSUE]. Would you like to know more about it?",
-
-
+    "level_1_industry": "Hey! What industry are you in?",
+    "level_2_business_status": "Nice! And how’s business going for you lately?",
+    "level_2_positive": "Love hearing that! Have you ever had to deal with any challenges in your business?",
+    "level_2_vague": "Hmm, I didn’t quite catch that. Can you tell me a bit more about how your business is doing?",
+    "level_2_reject": "No worries at all! But if you're open to it, how are things going with your business?",
+    "level_3_negative": "Gotcha. What’s the biggest challenge you're facing right now?",
+    "level_3_tell_more": "Tell me more about that. What's really going on behind the scenes?",
+    "level_3_encourage_deal": "I’ve heard [INDUSTRY ISSUE] can be a big challenge in your space. Is that something you’ve been dealing with too?",
+    "level_4_deep_dive": "Sounds like [INDUSTRY ISSUE] isn’t easy to handle. What’s really going on? Any specific areas getting hit the hardest?",
+    "level_4_guide_reflection": "Not sure what to do next? Maybe we can figure it out together. What are your thoughts so far?",
+    "level_5_tried_solution": "Makes sense. Have you tried anything to fix it yet? What helped or didn’t?",
+    "level_5_encourage_optimism": "Let’s keep a positive outlook! How are you feeling about all this?",
+    "level_6_confirm_understanding": "Alright, just checking — you’re dealing with [INDUSTRY ISSUE] and you’ve tried [SOLUTION], right?",
+    "level_7_solution": "Think M&J Intelligence could help with that? We’ve got some good options for [INDUSTRY ISSUE]. Want to hear more?",
 }
 
 @csrf_exempt

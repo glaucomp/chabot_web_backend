@@ -45,8 +45,7 @@ logger = logging.getLogger(__name__)
 
 class RenderGeneratedHTMLView(APIView):
     def get(self, request, conversation_id):
-        user_response = request.GET.get("last_response", "")  # se quiser passar via GET
-        html_content = handle_html(conversation_id, user_response)
+        html_content = handle_html(conversation_id)
         return HttpResponse(html_content, content_type="text/html")
     
 class PromptConversationMaxView(APIView):

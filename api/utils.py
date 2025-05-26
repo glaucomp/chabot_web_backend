@@ -1,10 +1,14 @@
 from .models import ConversationFlow , ConversationHistory
 from django.utils import timezone
 import openai
+
 from api.services.chatbot import OPENAI_API_KEY
 import logging
 import random
 from django.http import JsonResponse
+
+from langchain.chat_models import ChatOpenAI
+from langchain.schema import HumanMessage
 
 logger = logging.getLogger(__name__)
 
@@ -58,6 +62,8 @@ FLOW_DEFINITION = {
     "level_7_solution": {"END": True},
 }
 
+chat = ChatOpenAI(model_name="gpt-4o", temperature=0.8)
+
 
 def get_varied_question(original_question, conversation_id):
     history = ConversationHistory.objects.filter(conversation_id=conversation_id).first()
@@ -71,19 +77,23 @@ def get_varied_question(original_question, conversation_id):
         )
 
         prompt = f"""
-        Here’s the recent conversation:
-        {history_text}
+        You are a friendly assistant having a casual conversation like you're chatting with someone over coffee or on WhatsApp.
+        Your goal is to rephrase the original question in a more casual and friendly way, as if you were chatting with a friend.
+        Rewrite this question in a casual, friendly, and natural tone.
 
         You want to ask this question:
         "{original_question}"
 
-        Rewrite this question in a casual, friendly, and natural tone — like you're chatting with someone over coffee or on WhatsApp.
+        context of the conversation:
+        {history_text}
 
         Guidelines:
         - Keep it short, simple, and human.
         - Use everyday, non-formal language.
         - Be warm and curious.
-        - If relevant, add relatable examples like tech, healthcare, retail, education, finance, or real estate.
+        - Avoid sounding robotic or overly formal.
+        - Make it feel like a friendly chat.
+        - Consult context of the conversation to make it more engaging.
 
         Return ONLY the rephrased question. No quotes, no extra text.
         """
@@ -130,15 +140,8 @@ def get_varied_question(original_question, conversation_id):
 
         logger.info(f"[VARIED_QUESTION - Initial] Prompt enviado:\n{prompt}")
 
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[{"role": "user", "content": prompt}],
-        max_tokens=180,
-        temperature=0.8
-    )
-
-    varied_question = response.choices[0].message.content.strip()
-
+    response = chat([HumanMessage(content=prompt)])
+    varied_question = response.content.strip()
     return varied_question if varied_question else original_question
 
 def add_conversation_step(conversation_id, level, node_id, question, response=None):
@@ -562,7 +565,7 @@ def classify_response_with_ai_level_7_solution(question, user_response, conversa
 
 
 def execute_final_node_action( conversation_id, user_response):
-   return handle_html(conversation_id, user_response)
+   return handle_html(conversation_id)
     
 def handle_html(conversation_id, user_response):
     from .models import ConversationFlow, ConversationHistory
@@ -629,4 +632,76 @@ def handle_html(conversation_id, user_response):
     if not (html.startswith("<!DOCTYPE html>") or html.startswith("<html>")):
         html = f"<!DOCTYPE html>\n<html>\n{html}\n</html>"
 
+    return html
+
+
+def handle_html(conversation_id):
+    from .models import ConversationFlow, ConversationHistory
+    history_obj = ConversationHistory.objects.filter(conversation_id=conversation_id).first()
+    history_text = ""
+    if history_obj and history_obj.history:
+        history_text = "\n".join(
+            f'{h["sender"]} ({h["timestamp"]}): {h["message"]}'
+            for h in history_obj.history[-10:]
+        )
+
+    # Load flow
+    flow_obj = ConversationFlow.objects.filter(conversation_id=conversation_id).first()
+    flow_text = ""
+    solution_text = ""
+    if flow_obj and flow_obj.flow:
+        flow = flow_obj.flow
+        flow_text = "\n".join(
+            f'Step {step["step"]} (Level {step["level"]}) - Q: {step["question"]} | A: {step.get("response", "Awaiting response")}'
+            for step in flow
+        )
+        # Try to extract a solution from the final step
+        last_step = flow[-1]
+        if last_step.get("node_id") == "level_7_solution":
+            solution_text = last_step.get("response", "")
+
+    return build_html_from_context(history_text, flow_text, solution_text)
+
+def build_html_from_context(history_text, flow_text, solution_text=""):
+    prompt = f"""
+        You are a senior frontend engineer and business consultant.
+
+        Your task is to generate a complete and professional standalone HTML document that displays a detailed overview of a conversation and its AI-generated solution.
+
+        Context:
+        - Conversation history:
+        {history_text}
+
+        - Conversation flow:
+        {flow_text}
+
+        - Final solution:
+        {solution_text}
+
+        Instructions:
+        - Create a fully structured HTML5 document with <html>, <head>, <body>, etc.
+        - Use clean, professional design with internal CSS (no frameworks).
+        - Use modern fonts, soft shadows, good padding, and warm color palette.
+        - Include the following sections in order:
+
+        1. Header: "Report"
+        2. Chat History: show messages in bubble-style layout with sender + timestamp.
+        3. Conversation Flow: question + response per step.
+        4. Solution Summary: formatted report, bullet points, yellow box.
+
+        Rules:
+        - Do not include explanations, comments, or Markdown formatting.
+        - The output must be a clean, self-contained HTML page ready for display.
+        """
+
+    response = client.chat.completions.create(
+        model="gpt-4",
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0.4,
+        max_tokens=1500
+    )
+
+    html = response.choices[0].message.content.strip()
+    if not (html.startswith("<!DOCTYPE html>") or html.startswith("<html>")):
+        html = f"<!DOCTYPE html>\n<html>\n{html}\n</html>"
     return html
